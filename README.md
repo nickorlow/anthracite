@@ -10,3 +10,8 @@ A web server written in C++
 - [ ] Cleanup codebase 
 - [ ] Enable cache support 
 - [ ] Support newer HTTP versions 
+
+## Screenshots
+
+![A picture of the default index.html page used by Anthracite](https://github.com/nickorlow/anthracite/blob/main/.screenshots/default-page.png?raw=true)
+![A picture of the Anthracite default 404 not found page](https://github.com/nickorlow/anthracite/blob/main/.screenshots/404-page.png?raw=true)
