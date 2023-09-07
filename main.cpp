@@ -1,6 +1,5 @@
 #include "backends/file_backend.cpp"
 #include <exception>
-#include <fmt/core.h>
 #include <fstream>
 #include <iostream>
 #include <netinet/in.h>
