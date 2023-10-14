@@ -2,7 +2,7 @@
 A simple web server written in C++
 
 ## Module-Based Backends
-Anthracite includes (read: will include) a system for allowing different "backend modules" to handle requests.
+Anthracite includes (read: will include) system for allowing different "backend modules" to handle requests.
 This allows for anthracite to be extended for additional use-cases. For example, the following
 backends could be implemented: 
 

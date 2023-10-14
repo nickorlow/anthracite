@@ -142,11 +142,11 @@ static unordered_map<int, string> const http_status_map = {
 
 class name_value {
 private:
-  string _name;
-  string _value;
-   
+    string _name;
+    string _value;
+
 protected:
-   name_value() {}
+    name_value() {}
 
 public:
     name_value(string name, string value)
@@ -155,11 +155,10 @@ public:
     {
     }
     virtual ~name_value() = default;
-    name_value(const name_value &) = default;
-    name_value& operator =(name_value const&) = default;
+    name_value(const name_value&) = default;
+    name_value& operator=(name_value const&) = default;
     name_value(name_value&&) = default;
-    name_value& operator = (name_value&&) = default;
-
+    name_value& operator=(name_value&&) = default;
 
     string name() { return _name; }
     string value() { return _value; }

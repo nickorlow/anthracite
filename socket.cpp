@@ -20,7 +20,7 @@ private:
     socklen_t client_addr_len {};
 
 public:
-    anthracite_socket(int port, int max_queue = 10)
+    anthracite_socket(int port, int max_queue = 100)
         : server_socket(socket(AF_INET, SOCK_STREAM, 0))
         , client_ip("")
     {
