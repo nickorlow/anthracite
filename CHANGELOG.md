@@ -1,12 +1,12 @@
 # 0.1.0 Second Pre-Release 
 
 - Allowed multiple clients to be handled at once via multithreadding
-- Enabled file cacheing in file_backend
-- Added benchmarking utils 
+- Enabled file caching in file_backend
+- Added benchmarking utilities 
 
 ## Known Issues
 - High resource utilization
-- Content other than HTMl will be treated as `text/html`
+- Content other than HTML will still be treated as `text/html`
 
 ## Benchmark Results
 

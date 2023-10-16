@@ -44,13 +44,13 @@ Run the following commands to serve all files located in `./www/`:
 - [x] Serve HTML Pages
 - [x] Properly parse HTTP requests 
 - [x] Add module-based backend system for handling requests
+- [x] Multithreading 
 - [ ] Cleanup (this one will never truly be done) 
 - [ ] Proper error handling
-- [ ] Flesh out module-based backend system for handling requests
+- [ ] Build out module-based backend system for handling requests
 - [ ] Fix glaring security issues 
 - [ ] Faster parsing 
-- [ ] Multithreading 
-- [ ] Speed optimizations such as keepint the most visited html pages in memory 
+- [ ] Speed optimizations such as keeping the most visited html pages in memory 
 - [ ] Cleanup codebase 
 - [ ] Enable cache support 
 - [ ] Support newer HTTP versions 
