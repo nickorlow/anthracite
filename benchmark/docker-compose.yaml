@@ -1,0 +1,19 @@
+services:
+  anthracite:
+    build: 
+      context: .
+      dockerfile: anthracite.Dockerfile
+    ports:
+      - "8081:80"
+  nginx:
+    build: 
+      context: .
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "8082:80"
+  apache:
+    build:
+      context: . 
+      dockerfile: apache.Dockerfile
+    ports:
+      - "8083:80"
