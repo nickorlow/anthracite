@@ -7,7 +7,7 @@ private:
   string file_dir;
 
   unique_ptr<http_response> handle_request_cache(http_request& req) {
-     string filename = req.path() == "/" ? "index.html" : req.path();
+     string filename = req.path() == "/" ? "/index.html" : req.path();
      filename = file_dir + filename;
      auto file_info = file_cache.find(filename);
 

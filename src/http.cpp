@@ -438,6 +438,7 @@ public:
         add_header(http_header("Content-Type", content_type), false);
         add_header(http_header("Content-Length", ::to_string(_content.length())), false);
         add_header(http_header("Server", "Anthracite/0.0.1"), false);
+        add_header(http_header("Origin-Server", "Anthracite/0.0.1"), false);
 
         for (auto header : _headers) {
             response += header.second.to_string();

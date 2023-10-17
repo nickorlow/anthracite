@@ -1,3 +1,8 @@
+# 0.1.2 Fourth Pre-Release
+
+- Fixed bug with mapping / to index.html
+- Addex Origin-Server header
+
 # 0.1.1 Third Pre-Release
 
 - Add mappings for common MIME types
