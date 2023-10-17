@@ -56,7 +56,7 @@ public:
         client_socket = -1;
     }
 
-    void send_message(string msg)
+    void send_message(string& msg)
     {
         if (client_socket == -1) {
             return;

@@ -34,6 +34,7 @@ def make_request(request_number, server_name):
         response_times[server_name].append(response_time)
     else:
         print(f'Request {request_number}: Request failed with status code {response.status_code}')
+
 print('=====[ Anthracite Benchmarking Tool ]=====')
 print(f'Requests     : {num_requests}')
 print(f'Users/Threads: {num_users}\n\n')

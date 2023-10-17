@@ -12,6 +12,9 @@ build-docker:
 run: build
 	./anthracite 8080
 
+run-test: build
+	./anthracite 8080 ./test_www
+
 debug: build
 	gdb --args ./anthracite 8080
 

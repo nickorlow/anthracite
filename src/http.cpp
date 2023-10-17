@@ -139,6 +139,27 @@ static unordered_map<int, string> const http_status_map = {
     { 420, "ENHANCE YOUR CALM" }
 };
 
+static unordered_map<std::string, std::string> const mime_types = {
+    { "html", "text/html" },
+    { "css", "text/css" },
+
+    { "js", "application/javascript" },
+    { "pdf", "application/pdf" },
+
+    { "ico", "image/x-icon" },
+    { "jpg", "image/jpeg" },
+    { "jpeg", "image/jpeg" },
+    { "png", "image/png" },
+    { "gif", "image/gif" },
+    { "bmp", "image/bmp" },
+
+    { "mp4", "video/mp4" },
+    { "avi", "video/x-msvideo" },
+    { "mkv", "video/x-matroska" },
+    { "mov", "video/quicktime" },
+    { "wmv", "video/x-ms-wmv" },
+};
+
 class name_value {
 private:
     string _name;
@@ -378,13 +399,15 @@ public:
 class http_response {
 private:
     int _status_code;
-    string _content;
+    string& _content;
+    string _filename;
     unordered_map<string, http_header> _headers; // kinda goofy, whatever
 
 public:
-    http_response(string content, int status_code = 200)
-        : _content(std::move(content))
+    http_response(string& content, string filename, int status_code = 200)
+        : _content(content)
         , _status_code(status_code)
+        , _filename(std::move(filename))
     {
     }
 
@@ -397,12 +420,22 @@ public:
         }
     }
 
-    string to_string()
+    string& content()
+    {
+        return _content;
+    }
+
+    string header_to_string()
     {
         string response = "";
         response += "HTTP/1.1 " + ::to_string(_status_code) + " " + http_status_map.find(_status_code)->second + "\r\n";
-
-        add_header(http_header("Content-Type", "text/html"), false);
+        string content_type = "text/html";
+        string file_extension = _filename.substr(_filename.rfind('.') + 1);
+        auto mime_type = mime_types.find(file_extension);
+        if (mime_type != mime_types.end()) {
+            content_type = mime_type->second;
+        }
+        add_header(http_header("Content-Type", content_type), false);
         add_header(http_header("Content-Length", ::to_string(_content.length())), false);
         add_header(http_header("Server", "Anthracite/0.0.1"), false);
 
@@ -411,8 +444,12 @@ public:
         }
 
         response += "\r\n";
-        response += _content;
 
         return response;
+    }
+
+    string to_string()
+    {
+        return header_to_string() + _content;
     }
 };
