@@ -9,13 +9,11 @@
 #include <unistd.h>
 #include <unordered_map>
 
-using namespace std;
-
 class anthracite_socket {
 private:
     int server_socket;
     int client_socket {};
-    string client_ip;
+    std::string client_ip;
     struct sockaddr_in client_addr {};
     socklen_t client_addr_len {};
 
@@ -42,10 +40,10 @@ public:
         client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len);
         char ip_str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, INET_ADDRSTRLEN);
-        client_ip = string(ip_str);
+        client_ip = std::string(ip_str);
     }
 
-    string get_client_ip()
+    std::string get_client_ip()
     {
         return client_ip;
     }
@@ -56,7 +54,7 @@ public:
         client_socket = -1;
     }
 
-    void send_message(string& msg)
+    void send_message(std::string& msg)
     {
         if (client_socket == -1) {
             return;
@@ -64,7 +62,7 @@ public:
         send(client_socket, &msg[0], msg.length(), 0);
     }
 
-    string recv_message(int buffer_size = 1024)
+    std::string recv_message(int buffer_size = 1024)
     {
         if (client_socket == -1) {
             return "";
@@ -73,6 +71,6 @@ public:
         char response[buffer_size + 1];
         recv(client_socket, response, sizeof(response), 0);
         response[buffer_size] = '\0';
-        return string(response);
+        return std::string(response);
     }
 };
