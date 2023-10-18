@@ -1,3 +1,13 @@
+/*
+ *
+ * smart_map.cpp
+ * -------------
+ * Class that wraps unordered_map. Chooses whether to do O(1) hash lookup
+ * or O(N) linear lookup based on benchmark. This is done as O(smallN) can
+ * be faster than O(1)
+ *
+ */
+
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -6,7 +16,7 @@
 #include <algorithm>
 #include <bits/stdc++.h>
 
-constexpr int benchmark_loops = 1000000;
+constexpr int benchmark_loops = 100;
 
 template <typename KeyType, typename ValueType>
 class smart_map {

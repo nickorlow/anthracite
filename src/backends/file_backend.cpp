@@ -40,7 +40,6 @@ private:
   void populate_cache() {
     populate_cache_dir(file_dir);
     populate_cache_dir("./error_pages/");
-
   }
 
 public:
