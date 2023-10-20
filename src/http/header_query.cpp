@@ -20,8 +20,8 @@ public:
     name_value(name_value&&) = default;
     name_value& operator=(name_value&&) = default;
 
-    std::string name() { return _name; }
-    std::string value() { return _value; }
+    std::string& name() { return _name; }
+    std::string& value() { return _value; }
 
     virtual std::string to_string() { return ""; }
 };

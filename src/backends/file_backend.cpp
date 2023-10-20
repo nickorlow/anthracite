@@ -1,11 +1,12 @@
 #include <filesystem>
+#include <string>
 #include "backend.cpp"
 
 class file_backend : public backend {
 private:
   std::unordered_map<std::string,std::string> file_cache;
   std::string file_dir;
-
+  
   std::unique_ptr<http_response> handle_request_cache(http_request& req) {
      std::string filename = req.path() == "/" ? "/index.html" : req.path();
      filename = file_dir + filename;
@@ -13,9 +14,7 @@ private:
 
      int status = http_status_codes::OK;
      if (file_info == file_cache.end()) {
-         status = http_status_codes::NOT_FOUND;
-         filename = "./error_pages/404.html";
-         file_info = file_cache.find(filename);
+       return handle_error(http_status_codes::NOT_FOUND);
      }
 
      return std::make_unique<http_response>(file_info->second, filename, status);
@@ -47,9 +46,22 @@ public:
     populate_cache();
   }
 
-  ~file_backend() = default;
 
   std::unique_ptr<http_response> handle_request(http_request& req) override {
     return handle_request_cache(req);
+  }
+  
+  std::unique_ptr<http_response> handle_error(const http_status_codes& error) {
+     std::string filename = "./error_pages/" + std::to_string(error) + ".html";
+     auto file_info = file_cache.find(filename);
+
+     http_status_codes status = error;
+     if (file_info == file_cache.end()) {
+         status = http_status_codes::NOT_FOUND;
+         filename = "./error_pages/404.html";
+         file_info = file_cache.find(filename);
+     }
+
+     return std::make_unique<http_response>(file_info->second, filename, status);
   }
 };

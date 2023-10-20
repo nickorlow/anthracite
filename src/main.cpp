@@ -17,15 +17,24 @@ void log_request_and_response(http_request& req, std::unique_ptr<http_response>&
 constexpr int default_port = 80;
 constexpr int max_worker_threads = 128;
 
-void handle_client(anthracite_socket s, backend& b, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
+void handle_client(anthracite_socket s, backend& b, file_backend& fb, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
 {
-    http_request req(s);
-    std::unique_ptr<http_response> resp = b.handle_request(req);
-    log_request_and_response(req, resp);
-    std::string header = resp->header_to_string();
-    s.send_message(header);
-    s.send_message(resp->content());
-    resp.reset();
+    while(true) {
+      std::string raw_request = s.recv_message(HTTP_HEADER_BYTES);
+      if(raw_request == "") {
+        break;
+      }
+      http_request req(raw_request, s.get_client_ip());
+      std::unique_ptr<http_response> resp = req.is_supported_version() ? b.handle_request(req) : fb.handle_error(http_status_codes::HTTP_VERSION_NOT_SUPPORTED);
+      log_request_and_response(req, resp);
+      std::string header = resp->header_to_string();
+      s.send_message(header);
+      s.send_message(resp->content());
+      resp.reset();
+      if(req.close_connection()) { 
+        break;
+      }
+    }
     s.close_conn();
     {
         std::lock_guard<std::mutex> lock(thread_wait_mutex);
@@ -58,7 +67,7 @@ int main(int argc, char** argv)
         std::unique_lock<std::mutex> lock(thread_wait_mutex);
         thread_wait_condvar.wait(lock, [active_threads] { return active_threads < max_worker_threads; });
         active_threads++;
-        std::thread(handle_client, s, std::ref(fb), std::ref(thread_wait_mutex), std::ref(thread_wait_condvar), std::ref(active_threads)).detach();
+        std::thread(handle_client, s, std::ref(fb), std::ref(fb), std::ref(thread_wait_mutex), std::ref(thread_wait_condvar), std::ref(active_threads)).detach();
     }
 
     exit(0);

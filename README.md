@@ -1,59 +1,28 @@
 # Anthracite
-A simple web server written in C++
+A simple web server written in C++. Supports HTTP 1.0 & 1.1.
 
-## Module-Based Backends
-Anthracite includes (read: will include) system for allowing different "backend modules" to handle requests.
-This allows for anthracite to be extended for additional use-cases. For example, the following
-backends could be implemented: 
+## Developing
 
-- File: Return files from a directory 
-- Reverse Proxy: Pass the request to another server 
-- Web Framework: Pass the request into an application built on your favorite web framework 
+To build/develop Anthracite, you must have C++20, Make, and Python3 installed.
 
-## Building & Debugging
-
-Once you have the repository cloned, you can run the following command to build Anthracite:
-
-```shell
-make build
-```
-
-It will create a binary file named `./anthracite`
-
-To save time, you can use the following command to build and run anthracite on port `8080`:
-
-```shell
-make run
-```
-
-To save time again, you can use the following command to build and debug anthracite in gdb:
-
-```shell
-make debug
-```
-
-## Usage
-
-Run the following commands to serve all files located in `./www/`:
-
-```shell
-./anthracite [PORT_NUMBER]
-```
+You can run Anthracite with: `make run`
 
 ## Todo
+- [x] HTTP/1.0
 - [x] Serve HTML Pages
 - [x] Properly parse HTTP requests 
 - [x] Add module-based backend system for handling requests
 - [x] Multithreading 
-- [ ] Cleanup (this one will never truly be done) 
-- [ ] Proper error handling
-- [ ] Build out module-based backend system for handling requests
-- [ ] Fix glaring security issues 
+- [x] HTTP/1.1
+- [ ] Improve benchmarking infrastructure
 - [ ] Faster parsing 
-- [ ] Speed optimizations such as keeping the most visited html pages in memory 
-- [ ] Cleanup codebase 
-- [ ] Enable cache support 
-- [ ] Support newer HTTP versions 
+- [ ] Fix glaring security issues 
+- [ ] Proper error handling
+- [ ] User configuration
+- [ ] Build out module-based backend system for handling requests
+- [ ] HTTP/2 
+- [ ] Enhance logging
+- [ ] Cleanup (this one will never truly be done) 
 
 ## Screenshots
 

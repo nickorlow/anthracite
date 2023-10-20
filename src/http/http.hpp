@@ -5,3 +5,4 @@
 #include "constants.cpp"
 #include "header_query.cpp"
 #include "../socket.cpp"
+#include "../build/version.cpp"

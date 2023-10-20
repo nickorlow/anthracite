@@ -1,0 +1,7 @@
+services:
+  anthracite:
+    build: 
+      context: .
+      dockerfile: anthracite.Dockerfile
+    ports:
+      - "8091:80"

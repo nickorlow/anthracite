@@ -1,2 +1,3 @@
 anthracite
 src/error_pages/
+src/build/version.cpp

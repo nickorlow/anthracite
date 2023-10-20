@@ -219,6 +219,8 @@ enum http_version { HTTP_0_9,
     HTTP_3_0 };
 
 static std::unordered_map<std::string, http_version> const http_version_map = {
+    // This is because HTTP 0.9 didn't specify version in the header
+    { "", HTTP_0_9 },
     { "HTTP/0.9", HTTP_0_9 },
     { "HTTP/1.0", HTTP_1_0 },
     { "HTTP/1.1", HTTP_1_1 },

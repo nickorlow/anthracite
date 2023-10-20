@@ -19,10 +19,9 @@ private:
     std::unordered_map<std::string, query_param> _query_params; // kinda goofy, whatever
 
 public:
-    http_request(anthracite_socket& s)
-        : _path(""), _client_ipaddr(s.get_client_ip())
+    http_request(std::string& raw_data, std::string client_ip)
+        : _path(""), _client_ipaddr(client_ip)
     {
-      std::string raw_data = s.recv_message(HTTP_HEADER_BYTES);
 
         parser_state state = METHOD;
 
@@ -135,6 +134,25 @@ public:
     http_method method() { return _method; }
 
     std::string client_ip() { return _client_ipaddr; }
+
+    http_version get_http_version() {
+      return _http_version;
+    }
+
+    bool is_supported_version() {
+      return _http_version == HTTP_1_1 || _http_version == HTTP_1_0;
+    }
+
+    bool close_connection() {
+      const auto& header = _headers.find("Connection");
+      const bool found = header != _headers.end();
+
+      if(found && header->second.value() == "keep-alive") {
+        return false;
+      }
+
+      return true;
+    }
 
     std::string to_string()
     {

@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <sys/time.h>
 
 constexpr int MAX_QUEUE_LENGTH = 100;
 
@@ -70,8 +71,17 @@ public:
             return "";
         }
 
+        struct timeval tv;
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
         char response[buffer_size + 1];
-        recv(client_socket, response, sizeof(response), 0);
+        int result = recv(client_socket, response, sizeof(response), 0);
+
+        if (result < 1) {
+          return "";
+        }
+
         response[buffer_size] = '\0';
         return std::string(response);
     }

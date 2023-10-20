@@ -32,17 +32,18 @@ public:
     std::string header_to_string()
     {
         std::string response = "";
-        response += "HTTP/1.0 " + std::to_string(_status_code) + " " + http_status_map.find(_status_code)->second + "\r\n";
+        response += "HTTP/1.1 " + std::to_string(_status_code) + " " + http_status_map.find(_status_code)->second + "\r\n";
         std::string content_type = "text/html";
         std::string file_extension = _filename.substr(_filename.rfind('.') + 1);
         auto mime_type = mime_types.find(file_extension);
         if (mime_type != mime_types.end()) {
             content_type = mime_type->second;
         }
+
         add_header(http_header("Content-Type", content_type), false);
         add_header(http_header("Content-Length", std::to_string(_content.length())), false);
-        add_header(http_header("Server", "Anthracite/0.0.1"), false);
-        add_header(http_header("Origin-Server", "Anthracite/0.0.1"), false);
+        add_header(http_header("Server", ANTHRACITE_FULL_VERSION_STRING), false);
+        add_header(http_header("Origin-Server", ANTHRACITE_FULL_VERSION_STRING), false);
 
         for (auto header : _headers) {
             response += header.second.to_string();
