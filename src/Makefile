@@ -1,10 +1,12 @@
 .PHONY: format lint build build-release build-docker run debug
 
-build:
+build-supplemental:
 	cd ./build && ./version.sh && python3 ./error_gen.py
+
+build: build-supplemental
 	g++ main.cpp --std=c++20 -g -o ./anthracite 
 
-build-release:
+build-release: build-supplemental
 	g++ main.cpp --std=c++20 -O3 -march=native -o ./anthracite
 
 build-docker:
