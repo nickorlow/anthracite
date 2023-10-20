@@ -7,7 +7,7 @@ build: build-supplemental
 	g++ main.cpp --std=c++20 -g -o ./anthracite 
 
 build-release: build-supplemental
-	g++ main.cpp --std=c++20 -O3 -march=native -o ./anthracite
+	g++ main.cpp --std=c++20 -O3 -o ./anthracite
 
 build-docker:
 	docker build . -t anthracite
