@@ -1,6 +1,7 @@
 .PHONY: format lint build build-release build-docker run debug
 
 build:
+	python3 ./error_gen.py
 	g++ main.cpp --std=c++20 -g -o ./anthracite 
 
 build-release:

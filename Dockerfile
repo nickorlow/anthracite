@@ -1,6 +1,6 @@
 FROM alpine as build-env
 
-RUN apk add --no-cache build-base
+RUN apk add --no-cache build-base python3
 COPY ./src/ .
 RUN make build-release 
 
