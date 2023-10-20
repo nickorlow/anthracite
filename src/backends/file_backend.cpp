@@ -11,9 +11,9 @@ private:
      filename = file_dir + filename;
      auto file_info = file_cache.find(filename);
 
-     int status = 200;
+     int status = http_status_codes::OK;
      if (file_info == file_cache.end()) {
-         status = 404;
+         status = http_status_codes::NOT_FOUND;
          filename = "./error_pages/404.html";
          file_info = file_cache.find(filename);
      }
@@ -43,9 +43,11 @@ private:
   }
 
 public:
-  file_backend(std::string dir = "./www") : file_dir(dir) {
+  file_backend(std::string dir = "./www") : file_dir(std::move(dir)) {
     populate_cache();
   }
+
+  ~file_backend() = default;
 
   std::unique_ptr<http_response> handle_request(http_request& req) override {
     return handle_request_cache(req);

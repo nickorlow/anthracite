@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <unordered_map>
 
+constexpr int MAX_QUEUE_LENGTH = 100;
+
 class anthracite_socket {
 private:
     int server_socket;
@@ -18,7 +20,7 @@ private:
     socklen_t client_addr_len {};
 
 public:
-    anthracite_socket(int port, int max_queue = 10)
+    anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH)
         : server_socket(socket(AF_INET, SOCK_STREAM, 0))
         , client_ip("")
     {
@@ -62,7 +64,7 @@ public:
         send(client_socket, &msg[0], msg.length(), 0);
     }
 
-    std::string recv_message(int buffer_size = 1024)
+    std::string recv_message(int buffer_size)
     {
         if (client_socket == -1) {
             return "";

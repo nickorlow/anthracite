@@ -17,6 +17,7 @@
 #include <bits/stdc++.h>
 
 constexpr int benchmark_loops = 100;
+constexpr int SEED = 570;
 
 template <typename KeyType, typename ValueType>
 class smart_map {
@@ -57,7 +58,7 @@ class smart_map {
 
     void assess_datastructure() {
       std::vector<std::pair<KeyType, ValueType>> vals(hmap.begin(), hmap.end());
-      std::shuffle(vals.begin(), vals.end(), std::default_random_engine(570));
+      std::shuffle(vals.begin(), vals.end(), std::default_random_engine(SEED));
       use_hmap = assess_hmap(vals) > assess_vmap(vals);
     }
 

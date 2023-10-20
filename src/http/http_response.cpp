@@ -8,7 +8,7 @@ private:
     std::unordered_map<std::string, http_header> _headers; // kinda goofy, whatever
 
 public:
-    http_response(std::string& content, std::string filename, int status_code = 200)
+    http_response(std::string& content, std::string filename, int status_code = http_status_codes::OK)
         : _content(content)
         , _status_code(status_code)
         , _filename(std::move(filename))
@@ -32,7 +32,7 @@ public:
     std::string header_to_string()
     {
         std::string response = "";
-        response += "HTTP/1.1 " + std::to_string(_status_code) + " " + http_status_map.find(_status_code)->second + "\r\n";
+        response += "HTTP/1.0 " + std::to_string(_status_code) + " " + http_status_map.find(_status_code)->second + "\r\n";
         std::string content_type = "text/html";
         std::string file_extension = _filename.substr(_filename.rfind('.') + 1);
         auto mime_type = mime_types.find(file_extension);

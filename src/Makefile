@@ -1,10 +1,10 @@
 .PHONY: format lint build build-release build-docker run debug
 
 build:
-	g++ main.cpp -g -o ./anthracite 
+	g++ main.cpp --std=c++20 -g -o ./anthracite 
 
 build-release:
-	g++ main.cpp -O3 -march=native -o ./anthracite
+	g++ main.cpp --std=c++20 -O3 -march=native -o ./anthracite
 
 build-docker:
 	docker build . -t anthracite
