@@ -6,9 +6,9 @@
 #include <netinet/in.h>
 #include <sstream>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <sys/time.h>
 
 constexpr int MAX_QUEUE_LENGTH = 100;
 
@@ -79,7 +79,7 @@ public:
         int result = recv(client_socket, response, sizeof(response), 0);
 
         if (result < 1) {
-          return "";
+            return "";
         }
 
         response[buffer_size] = '\0';

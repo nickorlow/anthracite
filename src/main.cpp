@@ -19,21 +19,21 @@ constexpr int max_worker_threads = 128;
 
 void handle_client(anthracite_socket s, backend& b, file_backend& fb, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
 {
-    while(true) {
-      std::string raw_request = s.recv_message(HTTP_HEADER_BYTES);
-      if(raw_request == "") {
-        break;
-      }
-      http_request req(raw_request, s.get_client_ip());
-      std::unique_ptr<http_response> resp = req.is_supported_version() ? b.handle_request(req) : fb.handle_error(http_status_codes::HTTP_VERSION_NOT_SUPPORTED);
-      log_request_and_response(req, resp);
-      std::string header = resp->header_to_string();
-      s.send_message(header);
-      s.send_message(resp->content());
-      resp.reset();
-      if(req.close_connection()) { 
-        break;
-      }
+    while (true) {
+        std::string raw_request = s.recv_message(HTTP_HEADER_BYTES);
+        if (raw_request == "") {
+            break;
+        }
+        http_request req(raw_request, s.get_client_ip());
+        std::unique_ptr<http_response> resp = req.is_supported_version() ? b.handle_request(req) : fb.handle_error(http_status_codes::HTTP_VERSION_NOT_SUPPORTED);
+        log_request_and_response(req, resp);
+        std::string header = resp->header_to_string();
+        s.send_message(header);
+        s.send_message(resp->content());
+        resp.reset();
+        if (req.close_connection()) {
+            break;
+        }
     }
     s.close_conn();
     {
