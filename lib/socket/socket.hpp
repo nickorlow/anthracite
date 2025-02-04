@@ -17,9 +17,7 @@ private:
     std::string client_ip;
     struct sockaddr_in client_addr {};
     socklen_t client_addr_len {};
-    static constexpr struct timeval timeout_tv {
-        .tv_sec = 5, .tv_usec = 0
-    };
+    static const struct timeval timeout_tv;
 
 public:
     anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH);

@@ -1,15 +1,15 @@
-#include "backends/file_backend.hpp"
 #include "./anthracite.hpp"
+#include "./log/log.hpp"
+#include "./socket/socket.hpp"
+#include "backends/file_backend.hpp"
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <netinet/in.h>
+#include <span>
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
-#include <span>
-#include "./log/log.hpp"
-#include "./socket/socket.hpp"
 
 using namespace anthracite;
 
@@ -44,7 +44,7 @@ void handle_client(socket::anthracite_socket s, backends::backend& b, backends::
     thread_wait_condvar.notify_one();
 }
 
-//int main(int argc, char** argv)
+// int main(int argc, char** argv)
 int anthracite_main(int argc, char** argv, backends::backend& be)
 {
     log::logger.initialize(log::LOG_LEVEL_INFO);

@@ -3,9 +3,9 @@ A simple web server written in C++. Supports HTTP 1.0 & 1.1.
 
 ## Developing
 
-To build/develop Anthracite, you must have C++20, Make, and Python3 installed.
+To build/develop Anthracite, you must have C++23, CMake, Make, and Python3 installed.
 
-You can run Anthracite with: `make run`
+Create a `build/` directory, run `cmake ..`, and then `make` to build.
 
 ## Todo
 - [x] HTTP/1.0
@@ -14,14 +14,14 @@ You can run Anthracite with: `make run`
 - [x] Add module-based backend system for handling requests
 - [x] Multithreading 
 - [x] HTTP/1.1
-- [ ] Improve benchmarking infrastructure
+- [x] Enhance logging
+- [-] Build out module-based backend system for handling requests
 - [ ] Faster parsing 
+- [ ] HTTP/2 
+- [ ] Improve benchmarking infrastructure
 - [ ] Fix glaring security issues 
 - [ ] Proper error handling
 - [ ] User configuration
-- [ ] Build out module-based backend system for handling requests
-- [ ] HTTP/2 
-- [ ] Enhance logging
 - [ ] Cleanup (this one will never truly be done) 
 
 ## Screenshots
