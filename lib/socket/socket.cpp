@@ -11,6 +11,8 @@
 
 namespace anthracite::socket {
 
+const struct timeval anthracite_socket::timeout_tv = { .tv_sec = 5, .tv_usec = 0};
+
 anthracite_socket::anthracite_socket(int port, int max_queue)
     : server_socket(::socket(AF_INET, SOCK_STREAM, 0))
     , client_ip("")

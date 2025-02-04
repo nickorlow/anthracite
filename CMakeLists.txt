@@ -15,21 +15,9 @@ add_custom_target(build-version
 
 add_custom_target(build-supplemental 
     COMMAND cd ../build_supp && python3 ./error_gen.py
-    COMMAND cp -r ../www .
-    DEPENDS build_supp/version.txt www/* build_supp/error_gen.py build-version
+    COMMAND mkdir www && cp -r ../default_www/regular/* ./www/
+    DEPENDS build_supp/version.txt ../default_www/regular/* build_supp/error_gen.py build-version
     COMMENT "Generated supplemental build files (default www dir + error pages)"
-)
-
-add_custom_target(lint
-    COMMAND clang-tidy *.cpp 
-)
-
-add_custom_target(lint-fix
-    COMMAND clang-tidy *.cpp -fix -fix-errors 
-)
-
-add_custom_target(build-docker
-    COMMAND docker build .. -t anthracite
 )
 
 add_custom_target(run

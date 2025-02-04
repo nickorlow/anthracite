@@ -15,7 +15,7 @@ Create a `build/` directory, run `cmake ..`, and then `make` to build.
 - [x] Multithreading 
 - [x] HTTP/1.1
 - [x] Enhance logging
-- [-] Build out module-based backend system for handling requests
+- [x] Create library that can be used to implement custom backends (i.e. webapi, fileserver, etc) 
 - [ ] Faster parsing 
 - [ ] HTTP/2 
 - [ ] Improve benchmarking infrastructure
