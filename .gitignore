@@ -1,3 +1,2 @@
-anthracite
-src/error_pages/
-src/build/version.cpp
+build/
+build_supp/version.cpp

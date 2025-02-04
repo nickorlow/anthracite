@@ -1,5 +1,5 @@
 #include "response.hpp"
-#include "../build_supp/version.cpp"
+#include "../version.hpp"
 
 namespace anthracite::http {
 

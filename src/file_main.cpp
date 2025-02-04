@@ -1,4 +1,4 @@
-#include "./anthracite_main.hpp"
+#include "./anthracite.hpp"
 #include "backends/file_backend.hpp"
 
 using namespace anthracite;

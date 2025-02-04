@@ -1,4 +1,4 @@
-#include "./anthracite_main.hpp"
+#include "./anthracite.hpp"
 #include "backends/backend.hpp"
 #include "http/constants.hpp"
 #include <memory>
