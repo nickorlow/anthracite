@@ -1,7 +1,10 @@
-#include <memory>
+#pragma once
 
-#include "../http/http_request.cpp"
-#include "../http/http_response.cpp"
+#include <memory>
+#include "../http/request.hpp"
+#include "../http/response.hpp"
+
+namespace anthracite::backends {
 
 class backend {
 public:
@@ -11,5 +14,7 @@ public:
   backend& operator = (backend const&) = delete;
   backend(backend&&) = delete;
   backend& operator=(backend&&) = delete;
-  virtual std::unique_ptr<http_response> handle_request(http_request& req) = 0;
+  virtual std::unique_ptr<http::response> handle_request(http::request& req) = 0;
+};
+
 };

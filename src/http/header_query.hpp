@@ -1,4 +1,7 @@
+#pragma once
 #include <string>
+
+namespace anthracite::http {
 
 class name_value {
 private:
@@ -26,13 +29,13 @@ public:
     virtual std::string to_string() { return ""; }
 };
 
-class http_header : public name_value {
+class header : public name_value {
 public:
-    http_header()
+    header()
         : name_value()
     {
     }
-    http_header(std::string name, std::string value)
+    header(std::string name, std::string value)
         : name_value(name, value)
     {
     }
@@ -52,4 +55,6 @@ public:
     }
 
     std::string to_string() override { return name() + "=" + value(); }
+};
+
 };

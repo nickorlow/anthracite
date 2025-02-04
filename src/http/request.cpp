@@ -1,25 +1,11 @@
-#include "http.hpp"
+#include "request.hpp"
+#include "constants.hpp"
+#include "../log/log.hpp"
+#include <stdio.h>
 
-class http_request {
-private:
-    enum parser_state { METHOD,
-        PATH,
-        QUERY_PARAM_NAME,
-        QUERY_PARAM_VALUE,
-        VERSION,
-        HEADER_NAME,
-        HEADER_VALUE,
-        BODY_CONTENT };
-    http_method _method;
-    http_version _http_version;
-    std::string _path;
-    std::string _client_ipaddr;
-    std::string _body_content;
-    std::unordered_map<std::string, http_header> _headers; // kinda goofy, whatever
-    std::unordered_map<std::string, query_param> _query_params; // kinda goofy, whatever
+namespace anthracite::http {
 
-public:
-    http_request(std::string& raw_data, std::string client_ip)
+    request::request(std::string& raw_data, const std::string& client_ip)
         : _path(""), _client_ipaddr(client_ip)
     {
 
@@ -31,10 +17,10 @@ public:
             switch (state) {
             case METHOD: {
                 if (raw_data[i] == ' ') {
-                    if (http_method_map.find(scratch) == http_method_map.end()) {
-                        _method = http_method::UNKNOWN;
+                    if (method_map.find(scratch) == method_map.end()) {
+                        _method = method::UNKNOWN;
                     } else {
-                        _method = http_method_map.find(scratch)->second;
+                        _method = method_map.find(scratch)->second;
                     }
                     scratch = "";
                     state = PATH;
@@ -86,7 +72,7 @@ public:
 
             case VERSION: {
                 if (raw_data[i] == '\n') {
-                    _http_version = http_version_map.find(scratch)->second;
+                    _http_version = version_map.find(scratch)->second;
                     scratch = "";
                     state = HEADER_NAME;
                 } else if (raw_data[i] != '\r') {
@@ -113,7 +99,7 @@ public:
 
             case HEADER_VALUE: {
                 if (raw_data[i] == '\n') {
-                    _headers[scratch] = http_header(scratch, scratch_2);
+                    _headers[scratch] = header(scratch, scratch_2);
                     scratch = "";
                     scratch_2 = "";
                     state = HEADER_NAME;
@@ -129,21 +115,22 @@ public:
         }
     }
 
-    std::string path() { return _path; }
+    std::string request::path() { return _path; }
 
-    http_method method() { return _method; }
+    method request::get_method() { return _method; }
 
-    std::string client_ip() { return _client_ipaddr; }
+    std::string request::client_ip() { return _client_ipaddr; }
 
-    http_version get_http_version() {
+    version request::get_http_version() {
       return _http_version;
     }
 
-    bool is_supported_version() {
-      return _http_version == HTTP_1_1 || _http_version == HTTP_1_0;
+    bool request::is_supported_version() {
+        //log::err << reverse_version_map.find(_http_version)->second << std::endl;
+        return _http_version == HTTP_1_1 || _http_version == HTTP_1_0;
     }
 
-    bool close_connection() {
+    bool request::close_connection() {
       const auto& header = _headers.find("Connection");
       const bool found = header != _headers.end();
 
@@ -154,16 +141,16 @@ public:
       return true;
     }
 
-    std::string to_string()
+    std::string request::to_string()
     {
       std::string response = "";
-        response += http_reverse_method_map.find(_method)->second + " " + _path + "?";
+        response += reverse_method_map.find(_method)->second + " " + _path + "?";
 
         for (auto qp : _query_params) {
             response += qp.second.to_string() + "&";
         }
 
-        response += " " + http_reverse_version_map.find(_http_version)->second + "\r\n";
+        response += " " + reverse_version_map.find(_http_version)->second + "\r\n";
 
         for (auto header : _headers) {
             response += header.second.to_string();
@@ -174,4 +161,5 @@ public:
 
         return response;
     }
+
 };

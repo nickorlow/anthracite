@@ -66,7 +66,7 @@ error_codes = {
 }
 
 
-error_dir = '../error_pages'
+error_dir = '../build/error_pages'
 os.makedirs(error_dir, exist_ok=True)
 
 for code, title in error_codes.items():

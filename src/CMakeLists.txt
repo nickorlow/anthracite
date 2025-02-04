@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 20)
+project(anthracite)
+
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-project(anthracite)
 
 add_custom_target(build-supplemental 
-    COMMAND cd ./build && ./version.sh && python3 ./error_gen.py
+    COMMAND cd ../build_supp && ./version.sh && python3 ./error_gen.py
+    COMMAND cp -r ../www .
 )
 
 add_custom_target(lint
@@ -32,5 +34,15 @@ add_custom_target(run
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
 )
 
-add_executable(anthracite-bin main.cpp) 
+FILE(GLOB SOURCES **/*.cpp)
+
+add_library(anthracite anthracite_main.cpp ${SOURCES}) 
+
+add_executable(anthracite-bin file_main.cpp) 
+target_link_libraries(anthracite-bin anthracite)
+
+add_executable(anthracite-api-bin api_main.cpp) 
+target_link_libraries(anthracite-api-bin anthracite)
+
 add_dependencies(anthracite-bin build-supplemental)
+add_dependencies(anthracite-bin anthracite)

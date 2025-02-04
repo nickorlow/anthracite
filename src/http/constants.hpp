@@ -1,9 +1,13 @@
+#pragma once 
+
 #include <string>
 #include <unordered_map>
 
-constexpr int HTTP_HEADER_BYTES = 8190;
+namespace anthracite::http {
 
-enum http_method {
+constexpr int HEADER_BYTES = 8190;
+
+enum method {
     GET,
     POST,
     DELETE,
@@ -24,7 +28,7 @@ enum http_method {
     UNKNOWN
 };
 
-enum http_status_codes {
+enum status_codes {
     CONTINUE = 100,
     SWITCHING_PROTOCOLS = 101,
     PROCESSING = 102,
@@ -90,49 +94,49 @@ enum http_status_codes {
     NETWORK_AUTHENTICATION_REQUIRED = 511
 };
 
-static std::unordered_map<std::string, http_method> const http_method_map = {
-    { "GET", http_method::GET },
-    { "POST", http_method::POST },
-    { "DELETE", http_method::DELETE },
-    { "PUT", http_method::PUT },
-    { "PATCH", http_method::PATCH },
-    { "HEAD", http_method::HEAD },
-    { "OPTIONS", http_method::OPTIONS },
-    { "CONNECT", http_method::CONNECT },
-    { "TRACE", http_method::TRACE },
-    { "COPY", http_method::COPY },
-    { "LINK", http_method::LINK },
-    { "UNLINK", http_method::UNLINK },
-    { "PURGE", http_method::PURGE },
-    { "LOCK", http_method::LOCK },
-    { "UNLOCK", http_method::UNLOCK },
-    { "PROPFIND", http_method::PROPFIND },
-    { "VIEW", http_method::VIEW },
-    { "UNKNOWN", http_method::UNKNOWN }
+static std::unordered_map<std::string, method> const method_map = {
+    { "GET", method::GET },
+    { "POST", method::POST },
+    { "DELETE", method::DELETE },
+    { "PUT", method::PUT },
+    { "PATCH", method::PATCH },
+    { "HEAD", method::HEAD },
+    { "OPTIONS", method::OPTIONS },
+    { "CONNECT", method::CONNECT },
+    { "TRACE", method::TRACE },
+    { "COPY", method::COPY },
+    { "LINK", method::LINK },
+    { "UNLINK", method::UNLINK },
+    { "PURGE", method::PURGE },
+    { "LOCK", method::LOCK },
+    { "UNLOCK", method::UNLOCK },
+    { "PROPFIND", method::PROPFIND },
+    { "VIEW", method::VIEW },
+    { "UNKNOWN", method::UNKNOWN }
 };
 
-static std::unordered_map<http_method, std::string> const http_reverse_method_map = {
-    { http_method::GET, "GET" },
-    { http_method::POST, "POST" },
-    { http_method::DELETE, "DELETE" },
-    { http_method::PUT, "PUT" },
-    { http_method::PATCH, "PATCH" },
-    { http_method::HEAD, "HEAD" },
-    { http_method::OPTIONS, "OPTIONS" },
-    { http_method::CONNECT, "CONNECT" },
-    { http_method::TRACE, "TRACE" },
-    { http_method::COPY, "COPY" },
-    { http_method::LINK, "LINK" },
-    { http_method::UNLINK, "UNLINK" },
-    { http_method::PURGE, "PURGE" },
-    { http_method::LOCK, "LOCK" },
-    { http_method::UNLOCK, "UNLOCK" },
-    { http_method::PROPFIND, "PROPFIND" },
-    { http_method::VIEW, "VIEW" },
-    { http_method::UNKNOWN, "UNKNOWN" }
+static std::unordered_map<method, std::string> const reverse_method_map = {
+    { method::GET, "GET" },
+    { method::POST, "POST" },
+    { method::DELETE, "DELETE" },
+    { method::PUT, "PUT" },
+    { method::PATCH, "PATCH" },
+    { method::HEAD, "HEAD" },
+    { method::OPTIONS, "OPTIONS" },
+    { method::CONNECT, "CONNECT" },
+    { method::TRACE, "TRACE" },
+    { method::COPY, "COPY" },
+    { method::LINK, "LINK" },
+    { method::UNLINK, "UNLINK" },
+    { method::PURGE, "PURGE" },
+    { method::LOCK, "LOCK" },
+    { method::UNLOCK, "UNLOCK" },
+    { method::PROPFIND, "PROPFIND" },
+    { method::VIEW, "VIEW" },
+    { method::UNKNOWN, "UNKNOWN" }
 };
 
-static std::unordered_map<int, std::string> const http_status_map = {
+static std::unordered_map<int, std::string> const status_map = {
     { 100, "CONTINUE" },
     { 101, "SWITCHING PROTOCOLS" },
     { 200, "OK" },
@@ -196,6 +200,7 @@ static std::unordered_map<std::string, std::string> const mime_types = {
     { "css", "text/css" },
 
     { "js", "application/javascript" },
+    { "json", "application/json" },
     { "pdf", "application/pdf" },
 
     { "ico",  "image/x-icon" },
@@ -212,13 +217,13 @@ static std::unordered_map<std::string, std::string> const mime_types = {
     { "wmv", "video/x-ms-wmv" },
 };
 
-enum http_version { HTTP_0_9,
+enum version { HTTP_0_9,
     HTTP_1_0,
     HTTP_1_1,
     HTTP_2_0,
     HTTP_3_0 };
 
-static std::unordered_map<std::string, http_version> const http_version_map = {
+static std::unordered_map<std::string, version> const version_map = {
     // This is because HTTP 0.9 didn't specify version in the header
     { "", HTTP_0_9 },
     { "HTTP/0.9", HTTP_0_9 },
@@ -228,7 +233,7 @@ static std::unordered_map<std::string, http_version> const http_version_map = {
     { "HTTP/3.0", HTTP_3_0 }
 };
 
-static std::unordered_map<http_version, std::string> const http_reverse_version_map = {
+static std::unordered_map<version, std::string> const reverse_version_map = {
     { HTTP_0_9, "HTTP/0.9" },
     { HTTP_1_0, "HTTP/1.0" },
     { HTTP_1_1, "HTTP/1.1" },
@@ -236,6 +241,4 @@ static std::unordered_map<http_version, std::string> const http_reverse_version_
     { HTTP_3_0, "HTTP/3.0" }
 };
 
-
-
-
+};
