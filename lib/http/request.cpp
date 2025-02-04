@@ -5,114 +5,108 @@
 
 namespace anthracite::http {
 
+void request::parse_header(std::string& raw_line) {
+    auto delim_pos = raw_line.find_first_of(':');
+    auto value_pos = raw_line.find_first_not_of(' ', delim_pos+1);
+
+    std::string header_name = raw_line.substr(0,delim_pos);
+    std::string header_val = raw_line.substr(value_pos);
+
+    _headers[header_name] = header(header_name, header_val);
+}
+
+void request::parse_query_param(std::string& raw_param) {
+    auto delim_pos = raw_param.find_first_of('=');
+    auto value_pos = delim_pos+1;
+
+    std::string query_name = raw_param.substr(0,delim_pos);
+    std::string query_val = raw_param.substr(value_pos);
+
+    _query_params[query_name] = query_param(query_name, query_val);
+}
+
+void request::parse_path(std::string& raw_path) {
+    std::stringstream ss(raw_path);
+    std::string tok;
+
+    if (getline(ss, tok, '?')){
+        _path = tok;
+    }
+    
+    while(getline(ss, tok, '&')) {
+        parse_query_param(tok);
+    }
+}
+
+void request::parse_request_line(std::string& raw_line) {
+        request_line_parser_state state = METHOD;
+        std::stringstream ss(raw_line);
+        std::string tok;
+        while(getline(ss, tok, ' ')){
+            switch(state) {
+                case METHOD: {
+                    auto search = method_map.find(tok);
+                    if (search != method_map.end()) {
+                        _method = search->second;
+                    } else {
+                        _method = method::UNKNOWN;
+                    }
+
+                    state = PATH;
+                    break;
+                };
+                
+                case PATH: {
+                    parse_path(tok);
+                    state = VERSION;
+                    break;
+                };
+
+                case VERSION: {
+                    auto search = version_map.find(tok);
+                    if (search != version_map.end()) {
+                        _http_version = search->second;
+                    } else {
+                        _http_version = version::HTTP_1_0;
+                    }
+                    return;
+                };
+            }
+        }
+}
+
 request::request(std::string& raw_data, const std::string& client_ip)
     : _path("")
     , _client_ipaddr(client_ip)
 {
 
-    parser_state state = METHOD;
+    parser_state state = REQUEST_LINE;
 
-    std::string scratch = "";
-    std::string scratch_2 = "";
-    for (int i = 0; i < raw_data.length(); i++) {
-        switch (state) {
-        case METHOD: {
-            if (raw_data[i] == ' ') {
-                if (method_map.find(scratch) == method_map.end()) {
-                    _method = method::UNKNOWN;
+    std::stringstream line_stream(raw_data);
+    std::string line;
+
+    while(getline(line_stream, line, '\n') && state != BODY_CONTENT){
+        line.pop_back(); // HTTP requests do newline as \r\n, this removes the \r 
+        switch(state) {
+            case REQUEST_LINE: {
+                                   parse_request_line(line); 
+                                   state = HEADERS;
+                                   break;
+                               };
+            case HEADERS: {
+                if (line.length() == 0) {
+                    state = BODY_CONTENT;
                 } else {
-                    _method = method_map.find(scratch)->second;
+                    parse_header(line); 
                 }
-                scratch = "";
-                state = PATH;
-            } else {
-                scratch += raw_data[i];
-            }
-        } break;
-
-        case PATH: {
-            switch (raw_data[i]) {
-            case ' ':
-                state = VERSION;
                 break;
-            case '?':
-                state = QUERY_PARAM_NAME;
-                break;
-            default:
-                _path += raw_data[i];
-                break;
-            }
-        } break;
-
-        case QUERY_PARAM_NAME: {
-            if (raw_data[i] == ' ') {
-                scratch = "";
-                state = VERSION;
-            } else if (raw_data[i] == '=') {
-                state = QUERY_PARAM_VALUE;
-            } else {
-                scratch += raw_data[i];
-            }
-        } break;
-
-        case QUERY_PARAM_VALUE: {
-            if (raw_data[i] == ' ') {
-                _query_params[scratch] = query_param(scratch, scratch_2);
-                scratch = "";
-                scratch_2 = "";
-                state = VERSION;
-            } else if (raw_data[i] == '&') {
-                _query_params[scratch] = query_param(scratch, scratch_2);
-                scratch = "";
-                scratch_2 = "";
-                state = QUERY_PARAM_NAME;
-            } else {
-                scratch_2 += raw_data[i];
-            }
-        } break;
-
-        case VERSION: {
-            if (raw_data[i] == '\n') {
-                _http_version = version_map.find(scratch)->second;
-                scratch = "";
-                state = HEADER_NAME;
-            } else if (raw_data[i] != '\r') {
-                scratch += raw_data[i];
-            }
-        } break;
-
-        case HEADER_NAME: {
-            if (raw_data[i] == '\n') {
-                scratch = "";
-                scratch_2 = "";
-                state = BODY_CONTENT;
-                break;
-            } else if (raw_data[i] == ' ') {
-                scratch = "";
-                break;
-            } else if (raw_data[i] == ':') {
-                state = HEADER_VALUE;
-                i++;
-            } else {
-                scratch += raw_data[i];
-            }
-        } break;
-
-        case HEADER_VALUE: {
-            if (raw_data[i] == '\n') {
-                _headers[scratch] = header(scratch, scratch_2);
-                scratch = "";
-                scratch_2 = "";
-                state = HEADER_NAME;
-            } else if (raw_data[i] != '\r') {
-                scratch_2 += raw_data[i];
-            }
-        } break;
-
-        case BODY_CONTENT: {
-            _body_content += raw_data[i];
-        } break;
+            };
+            case BODY_CONTENT: break;
         }
+    }
+
+    if (getline(line_stream, line, '\0')) {
+        _body_content = line;
     }
 }
 
@@ -129,7 +123,6 @@ version request::get_http_version()
 
 bool request::is_supported_version()
 {
-    // log::err << reverse_version_map.find(_http_version)->second << std::endl;
     return _http_version == HTTP_1_1 || _http_version == HTTP_1_0;
 }
 
