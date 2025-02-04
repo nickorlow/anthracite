@@ -1,7 +1,6 @@
 name: Docker Build & Publish 
 
-on:
-  create:
+on: [workflow_dispatch]
 
 env:
   CTR_REGISTRY: git.nickorlow.com 
