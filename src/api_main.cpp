@@ -1,6 +1,6 @@
-#include "./anthracite.hpp"
-#include "backends/backend.hpp"
-#include "http/constants.hpp"
+#include "../lib/anthracite.hpp"
+#include "../lib/backends/backend.hpp"
+#include "../lib/http/constants.hpp"
 #include <memory>
 #include <optional>
 #include <sstream>

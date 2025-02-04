@@ -1,5 +1,5 @@
-#include "./anthracite.hpp"
-#include "backends/file_backend.hpp"
+#include "../lib/anthracite.hpp"
+#include "../lib/backends/file_backend.hpp"
 
 using namespace anthracite;
 

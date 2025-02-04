@@ -1,5 +1,3 @@
-#pragma once
-
 #include "./log.hpp"
 
 namespace anthracite::log {

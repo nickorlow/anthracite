@@ -37,9 +37,8 @@ add_custom_target(run
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
 )
 
-FILE(GLOB SOURCES src/**/*.cpp build_supp/version.cpp)
-
-add_library(anthracite src/anthracite.cpp ${SOURCES}) 
+FILE(GLOB LIB_SOURCES lib/*.cpp lib/**/*.cpp build_supp/version.cpp)
+add_library(anthracite ${LIB_SOURCES}) 
 add_dependencies(anthracite build-version)
 
 add_executable(anthracite-bin src/file_main.cpp) 

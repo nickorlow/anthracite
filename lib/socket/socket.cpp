@@ -7,24 +7,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <vector>
+#include "./socket.hpp"
 
 namespace anthracite::socket {
 
-constexpr int MAX_QUEUE_LENGTH = 100;
 
-class anthracite_socket {
-private:
-    int server_socket;
-    int client_socket {};
-    std::string client_ip;
-    struct sockaddr_in client_addr {};
-    socklen_t client_addr_len {};
-    static constexpr struct timeval timeout_tv {
-        .tv_sec = 5, .tv_usec = 0
-    };
-
-public:
-    anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH)
+anthracite_socket::anthracite_socket(int port, int max_queue)
         : server_socket(::socket(AF_INET, SOCK_STREAM, 0))
         , client_ip("")
     {
@@ -40,7 +28,7 @@ public:
         listen(server_socket, max_queue);
     }
 
-    void wait_for_conn()
+    void anthracite_socket::wait_for_conn()
     {
         client_ip = "";
         client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
@@ -49,18 +37,18 @@ public:
         client_ip = std::string(ip_str.data());
     }
 
-    const std::string& get_client_ip()
+    const std::string& anthracite_socket::get_client_ip()
     {
         return client_ip;
     }
 
-    void close_conn()
+    void anthracite_socket::close_conn()
     {
         close(client_socket);
         client_socket = -1;
     }
 
-    void send_message(std::string& msg)
+    void anthracite_socket::send_message(std::string& msg)
     {
         if (client_socket == -1) {
             return;
@@ -68,7 +56,7 @@ public:
         send(client_socket, &msg[0], msg.length(), 0);
     }
 
-    std::string recv_message(int buffer_size)
+    std::string anthracite_socket::recv_message(int buffer_size)
     {
         if (client_socket == -1) {
             return "";
@@ -85,6 +73,5 @@ public:
         response[buffer_size] = '\0';
         return { response.data() };
     }
-};
 
 };
