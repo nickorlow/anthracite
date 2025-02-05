@@ -1,27 +1,30 @@
 #include "request.hpp"
 #include "../log/log.hpp"
 #include "constants.hpp"
+#include <map>
 #include <cstring>
 #include <stdio.h>
 
 namespace anthracite::http {
 
-void request::parse_header(char* raw_line) {
-    uint32_t delim_pos = strstr(raw_line, ":") - raw_line + 1;
+void request::parse_header(std::string& raw_line) {
+    auto delim_pos = raw_line.find_first_of(':');
+    auto value_pos = raw_line.find_first_not_of(' ', delim_pos+1);
 
-    std::string query_val((char*)(raw_line + delim_pos));
-    std::string query_name(raw_line, delim_pos - 1);
+    std::string header_name = raw_line.substr(0,delim_pos);
+    std::string header_val = raw_line.substr(value_pos);
 
-    _headers[query_name] = header(query_name, query_val);
+    _headers[header_name] = header_val;
 }
 
-void request::parse_query_param(char* raw_param) {
-    uint32_t delim_pos = strstr(raw_param, "=") - raw_param + 1;
+void request::parse_query_param(std::string& raw_param) {
+    auto delim_pos = raw_param.find_first_of('=');
+    auto value_pos = delim_pos+1;
 
-    std::string query_val((char*)(raw_param + delim_pos));
-    std::string query_name(raw_param, delim_pos - 1);
+    std::string query_name = raw_param.substr(0,delim_pos);
+    std::string query_val = raw_param.substr(value_pos);
 
-    _query_params[query_name] = query_param(query_name, query_val);
+    _query_params[query_name] = query_val;
 }
 
 void request::parse_path(char* raw_path) {
@@ -32,19 +35,19 @@ void request::parse_path(char* raw_path) {
         _path = tok;
     }
 
-    tok = strtok_r(nullptr, "&", &saveptr);
+    tok = strtok_r(nullptr, "?", &saveptr);
     while(tok) {
-        parse_query_param(tok);
-        tok = strtok_r(nullptr, "&", &saveptr);
+        std::string rtok(tok);
+        parse_query_param(rtok);
+        tok = strtok_r(nullptr, "?", &saveptr);
     }
 }
 
-void request::parse_request_line(std::string& raw_line) {
+void request::parse_request_line(char* raw_line) {
         request_line_parser_state state = METHOD;
-        std::stringstream ss(raw_line);
 
         char* saveptr = nullptr;
-        char* tok = strtok_r(raw_line.data(), " ", &saveptr);
+        char* tok = strtok_r(raw_line, " \r", &saveptr);
 
         while(tok){
             switch(state) {
@@ -61,6 +64,7 @@ void request::parse_request_line(std::string& raw_line) {
                 };
                 
                 case PATH: {
+                    std::string str_tok(tok);
                     parse_path(tok);
                     state = VERSION;
                     break;
@@ -76,7 +80,7 @@ void request::parse_request_line(std::string& raw_line) {
                     return;
                 };
             }
-            tok = strtok_r(nullptr, " ", &saveptr);
+            tok = strtok_r(nullptr, " \r", &saveptr);
         }
 }
 
@@ -87,22 +91,25 @@ request::request(std::string& raw_data, const std::string& client_ip)
 
     parser_state state = REQUEST_LINE;
 
-    std::stringstream line_stream(raw_data);
-    std::string line;
+    char* saveptr = nullptr;
+    char* tok = strtok_r(raw_data.data(), "\r\n", &saveptr);
 
-    while(getline(line_stream, line, '\n') && state != BODY_CONTENT){
-        line.pop_back(); // HTTP requests do newline as \r\n, this removes the \r 
+    while(tok && state != BODY_CONTENT){
         switch(state) {
             case REQUEST_LINE: {
-                                   parse_request_line(line); 
+                                   parse_request_line(tok); 
                                    state = HEADERS;
+                                    tok = strtok_r(nullptr, "\n", &saveptr);
                                    break;
                                };
             case HEADERS: {
-                if (line.length() == 0) {
+                if (tok[0] == '\r') {
                     state = BODY_CONTENT;
                 } else {
-                    parse_header(line.data()); 
+                    std::string rtok(tok);
+                    rtok.pop_back();
+                    parse_header(rtok); 
+                tok = strtok_r(nullptr, "\n", &saveptr);
                 }
                 break;
             };
@@ -110,9 +117,13 @@ request::request(std::string& raw_data, const std::string& client_ip)
         }
     }
 
-    if (getline(line_stream, line, '\0')) {
-        _body_content = line;
+    tok = strtok_r(nullptr, "", &saveptr);
+    if (tok) {
+        _body_content = std::string(tok);
     }
+    //if (getline(line_stream, line, '\0')) {
+    //    _body_content = line;
+    //}
 }
 
 std::string request::path() { return _path; }
@@ -136,7 +147,7 @@ bool request::close_connection()
     const auto& header = _headers.find("Connection");
     const bool found = header != _headers.end();
 
-    if (found && header->second.value() == "keep-alive") {
+    if (found && header->second == "keep-alive") {
         return false;
     }
 
@@ -146,19 +157,36 @@ bool request::close_connection()
 std::string request::to_string()
 {
     std::string response = "";
-    response += reverse_method_map.find(_method)->second + " " + _path + "?";
+    response += reverse_method_map.find(_method)->second + " " + _path;
 
-    for (auto qp : _query_params) {
-        response += qp.second.to_string() + "&";
+    if (_query_params.size() > 0) {
+        response += "?";
+    }
+
+    auto qp_map = std::map(_query_params.begin(), _query_params.end());
+    auto qp = qp_map.begin();
+    while (qp != qp_map.end()) {
+        response += qp->first + "=" + qp->second;
+        if (++qp != qp_map.end()) {
+            response += "&";
+        }
     }
 
     response += " " + reverse_version_map.find(_http_version)->second + "\r\n";
 
-    for (auto header : _headers) {
-        response += header.second.to_string();
+    if (_headers.size() == 0) {
+        response += "\r\n";
     }
 
-    response += "\r\n";
+    auto hd_map = std::map(_headers.begin(), _headers.end());
+    auto hd = hd_map.begin();
+    while (hd != hd_map.end()) {
+        response += hd->first + ": " + hd->second + "\r\n";
+        if (++hd == hd_map.end()) {
+            response += "\r\n";
+        }
+    }
+
     response += _body_content;
 
     return response;

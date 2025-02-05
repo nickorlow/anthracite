@@ -24,13 +24,13 @@ private:
     std::string _path;
     std::string _client_ipaddr;
     std::string _body_content;
-    std::unordered_map<std::string, header> _headers; // kinda goofy, whatever
-    std::unordered_map<std::string, query_param> _query_params; // kinda goofy, whatever
-                                                                //
-    void parse_request_line(std::string& raw_line);
-    void parse_header(char* raw_line);
+    std::unordered_map<std::string, std::string> _headers; 
+    std::unordered_map<std::string, std::string> _query_params;
+
+    void parse_request_line(char* raw_line);
+    void parse_header(std::string& raw_line);
     void parse_path(char* raw_path);
-    void parse_query_param(char* raw_param);
+    void parse_query_param(std::string& raw_param);
 
 public:
     request(std::string& raw_data, const std::string& client_ip);
