@@ -1,3 +1,5 @@
+#pragma once 
+
 #include <arpa/inet.h>
 #include <malloc.h>
 #include <netinet/in.h>
@@ -10,8 +12,8 @@ namespace anthracite::socket {
 
 
 class anthracite_socket {
+protected:
     static const int MAX_QUEUE_LENGTH = 100;
-private:
     int server_socket;
     int client_socket {};
     std::string client_ip;
@@ -22,11 +24,11 @@ private:
 public:
     anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH);
 
-    void wait_for_conn();
-    const std::string& get_client_ip();
-    void close_conn();
-    void send_message(std::string& msg);
-    std::string recv_message(int buffer_size);
+    virtual void wait_for_conn();
+    virtual const std::string& get_client_ip();
+    virtual void close_conn();
+    virtual void send_message(std::string& msg);
+    virtual std::string recv_message(int buffer_size);
 };
 
 };

@@ -1,6 +1,7 @@
 #include "./anthracite.hpp"
 #include "./log/log.hpp"
 #include "./socket/socket.hpp"
+#include "./socket/tls_socket.hpp"
 #include "backends/file_backend.hpp"
 #include <chrono>
 #include <condition_variable>
@@ -24,7 +25,7 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
-void handle_client(socket::anthracite_socket s, backends::backend& b, backends::file_backend& fb, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
+void handle_client(socket::tls_socket s, backends::backend& b, backends::file_backend& fb, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
 {
     while (true) {
         std::string raw_request = s.recv_message(http::HEADER_BYTES);
@@ -38,20 +39,7 @@ void handle_client(socket::anthracite_socket s, backends::backend& b, backends::
             break;
         }
 
-        http::request req(raw_request, s.get_client_ip());
-        std::unique_ptr<http::response> resp = req.is_supported_version() ? b.handle_request(req) : fb.handle_error(http::status_codes::HTTP_VERSION_NOT_SUPPORTED);
-        std::string header = resp->header_to_string();
-        s.send_message(header);
-        s.send_message(resp->content());
-
-        auto end = high_resolution_clock::now();
-        auto ms_int = duration_cast<std::chrono::microseconds>(end-start);
-        log_request_and_response(req, resp , ms_int.count());
-        
-        resp.reset();
-        if (req.close_connection()) {
-            break;
-        }
+        continue;
     }
     s.close_conn();
     {
@@ -63,17 +51,16 @@ void handle_client(socket::anthracite_socket s, backends::backend& b, backends::
 
 int anthracite_main(int argc, char** argv, backends::backend& be)
 {
-    log::logger.initialize(log::LOG_LEVEL_INFO);
+    log::logger.initialize(log::LOG_LEVEL_DEBUG);
     auto args = std::span(argv, size_t(argc));
     int port_number = default_port;
 
     if (argc > 1) {
         port_number = atoi(args[1]);
     }
-    log::verbose << "Initializing Anthracite" << std::endl;
-    socket::anthracite_socket s(port_number);
+
+    socket::tls_socket s(port_number);
     backends::file_backend fb(argc > 2 ? args[2] : "./www");
-    log::verbose << "Initialization Complete" << std::endl;
     log::info << "Listening for HTTP connections on port " << port_number << std::endl;
 
     int active_threads = 0;
