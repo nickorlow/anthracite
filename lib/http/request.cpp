@@ -1,48 +1,52 @@
 #include "request.hpp"
 #include "../log/log.hpp"
 #include "constants.hpp"
+#include <cstring>
 #include <stdio.h>
 
 namespace anthracite::http {
 
-void request::parse_header(std::string& raw_line) {
-    auto delim_pos = raw_line.find_first_of(':');
-    auto value_pos = raw_line.find_first_not_of(' ', delim_pos+1);
+void request::parse_header(char* raw_line) {
+    uint32_t delim_pos = strstr(raw_line, ":") - raw_line + 1;
 
-    std::string header_name = raw_line.substr(0,delim_pos);
-    std::string header_val = raw_line.substr(value_pos);
+    std::string query_val((char*)(raw_line + delim_pos));
+    std::string query_name(raw_line, delim_pos - 1);
 
-    _headers[header_name] = header(header_name, header_val);
+    _headers[query_name] = header(query_name, query_val);
 }
 
-void request::parse_query_param(std::string& raw_param) {
-    auto delim_pos = raw_param.find_first_of('=');
-    auto value_pos = delim_pos+1;
+void request::parse_query_param(char* raw_param) {
+    uint32_t delim_pos = strstr(raw_param, "=") - raw_param + 1;
 
-    std::string query_name = raw_param.substr(0,delim_pos);
-    std::string query_val = raw_param.substr(value_pos);
+    std::string query_val((char*)(raw_param + delim_pos));
+    std::string query_name(raw_param, delim_pos - 1);
 
     _query_params[query_name] = query_param(query_name, query_val);
 }
 
-void request::parse_path(std::string& raw_path) {
-    std::stringstream ss(raw_path);
-    std::string tok;
+void request::parse_path(char* raw_path) {
+    char* saveptr = nullptr;
+    char* tok = strtok_r(raw_path, "?", &saveptr);
 
-    if (getline(ss, tok, '?')){
+    if (tok){
         _path = tok;
     }
-    
-    while(getline(ss, tok, '&')) {
+
+    tok = strtok_r(nullptr, "&", &saveptr);
+    while(tok) {
         parse_query_param(tok);
+        tok = strtok_r(nullptr, "&", &saveptr);
     }
 }
 
 void request::parse_request_line(std::string& raw_line) {
         request_line_parser_state state = METHOD;
         std::stringstream ss(raw_line);
-        std::string tok;
-        while(getline(ss, tok, ' ')){
+
+        char* saveptr = nullptr;
+        char* tok = strtok_r(raw_line.data(), " ", &saveptr);
+
+        while(tok){
             switch(state) {
                 case METHOD: {
                     auto search = method_map.find(tok);
@@ -72,6 +76,7 @@ void request::parse_request_line(std::string& raw_line) {
                     return;
                 };
             }
+            tok = strtok_r(nullptr, " ", &saveptr);
         }
 }
 
@@ -97,7 +102,7 @@ request::request(std::string& raw_data, const std::string& client_ip)
                 if (line.length() == 0) {
                     state = BODY_CONTENT;
                 } else {
-                    parse_header(line); 
+                    parse_header(line.data()); 
                 }
                 break;
             };
