@@ -3,8 +3,6 @@
 #include <string>
 #include <unordered_map>
 #include "header_query.hpp"
-#include "constants.hpp"
-#include <optional>
 
 namespace anthracite::http {
 
@@ -13,7 +11,7 @@ private:
     int _status_code;
     std::string* _content;
     std::string _content_noref;
-    std::unordered_map<std::string, header> _headers; // kinda goofy, whatever
+    std::unordered_map<std::string, header> _headers;
 
 public:
     response();

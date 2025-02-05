@@ -1,3 +1,29 @@
+# 0.3.0 
+- Rewrote request parser for readability and speed
+- Added improved logging with different log levels
+- Separated anthracite into libanthracite and anthracite-bin to allow for other projects to implement anthracite (example in ./src/api_main.cpp)
+- Cleaned up code and seperated most code into headers & source
+- Revamped build system to use CMake properly
+- Moved CI/CD over to Forgejo
+- General system stability improvements were made to enhance the user's experience
+
+
+## HTTP Request Parser Rewrite
+
+The following benchmark (source in ./tests/speed_tests.cpp) shows the speed 
+improvements made between 0.2.0 and 0.3.0, as well as comparison to boost's 
+parsing library. 
+
+It should probably be noted that Boost's parser can do a lot more than mine 
+and is likely slower for good reason. Also, these were single runs but 
+subsequent runs showed similar results.
+
+| Parser Tested      | RPS          |
+|--------------------|--------------|
+| Anthracite 0.2.0   | 688,042      |
+| Anthracite 0.3.0   | 27,027,000   |
+| Boost Beast        | 1,023,230    |
+
 # 0.2.0 Fifth Pre-Release
 - Added true HTTP/1.1 support with persistent connections
 - Added HTTP/1.0 vs HTTP/1.1 test to benchmarking suite

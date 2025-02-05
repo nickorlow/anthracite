@@ -1,5 +1,6 @@
 #include "response.hpp"
 #include "../version.hpp"
+#include "./constants.hpp"
 
 namespace anthracite::http {
 

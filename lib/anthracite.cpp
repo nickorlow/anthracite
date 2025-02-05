@@ -2,6 +2,7 @@
 #include "./log/log.hpp"
 #include "./socket/socket.hpp"
 #include "backends/file_backend.hpp"
+#include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
@@ -13,24 +14,40 @@
 
 using namespace anthracite;
 
-void log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp);
+void log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp, uint32_t micros);
 
 constexpr int default_port = 80;
 constexpr int max_worker_threads = 128;
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
 
 void handle_client(socket::anthracite_socket s, backends::backend& b, backends::file_backend& fb, std::mutex& thread_wait_mutex, std::condition_variable& thread_wait_condvar, int& active_threads)
 {
     while (true) {
         std::string raw_request = s.recv_message(http::HEADER_BYTES);
+        
+        // We're doing the start here even though it would ideally be done 
+        // before the first line since if we leave the connection open for 
+        // HTTP 1.1, we can spend a bit of time waiting
+        auto start = high_resolution_clock::now();
+
         if (raw_request == "") {
             break;
         }
+
         http::request req(raw_request, s.get_client_ip());
         std::unique_ptr<http::response> resp = req.is_supported_version() ? b.handle_request(req) : fb.handle_error(http::status_codes::HTTP_VERSION_NOT_SUPPORTED);
-        log_request_and_response(req, resp);
         std::string header = resp->header_to_string();
         s.send_message(header);
         s.send_message(resp->content());
+
+        auto end = high_resolution_clock::now();
+        auto ms_int = duration_cast<std::chrono::microseconds>(end-start);
+        log_request_and_response(req, resp , ms_int.count());
+        
         resp.reset();
         if (req.close_connection()) {
             break;
@@ -44,7 +61,6 @@ void handle_client(socket::anthracite_socket s, backends::backend& b, backends::
     thread_wait_condvar.notify_one();
 }
 
-// int main(int argc, char** argv)
 int anthracite_main(int argc, char** argv, backends::backend& be)
 {
     log::logger.initialize(log::LOG_LEVEL_INFO);
@@ -75,7 +91,7 @@ int anthracite_main(int argc, char** argv, backends::backend& be)
     exit(0);
 }
 
-void log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp)
+void log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp, uint32_t micros)
 {
-    log::info << "[" << resp->status_code() << " " + http::status_map.find(resp->status_code())->second + "] " + req.client_ip() + " " + http::reverse_method_map.find(req.get_method())->second + " " + req.path() << std::endl;
+    log::info << "[" << resp->status_code() << " " + http::status_map.find(resp->status_code())->second + "] " + req.client_ip() + " " + http::reverse_method_map.find(req.get_method())->second + " " + req.path() << " in " << micros << " usecs" << std::endl;
 }
