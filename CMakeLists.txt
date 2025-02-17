@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(OpenSSL REQUIRED)
+
 add_custom_target(build-version
     COMMAND cd ../build_supp && ./version.sh
     DEPENDS build_supp/version.txt 
@@ -29,6 +31,8 @@ add_custom_target(run
 FILE(GLOB LIB_SOURCES lib/*.cpp lib/**/*.cpp build_supp/version.cpp)
 add_library(anthracite ${LIB_SOURCES}) 
 add_dependencies(anthracite build-version)
+target_link_libraries(anthracite OpenSSL::SSL OpenSSL::Crypto)
+target_include_directories(anthracite PUBLIC ${OPENSSL_INCLUDE_DIR})
 
 add_executable(anthracite-bin src/file_main.cpp) 
 target_link_libraries(anthracite-bin anthracite)
