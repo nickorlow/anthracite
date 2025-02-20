@@ -89,12 +89,13 @@ int listen_loop(int port_number, backends::backend& be, bool tls) {
         socket::anthracite_socket* client_sock;
     
         if (tls){
-            client_sock = new socket::openssl_socket(*dynamic_cast<socket::openssl_socket*>(socket));
+            socket::openssl_socket* ssl_sock = dynamic_cast<socket::openssl_socket*>(socket);
+            client_sock = new socket::openssl_socket(*ssl_sock);
         } else {
             client_sock = new socket::anthracite_socket(*socket);
         }
 
-        std::thread(handle_client, socket, std::ref(be), std::ref(fb), std::ref(thread_wait_mutex), std::ref(thread_wait_condvar), std::ref(active_threads)).detach();
+        std::thread(handle_client, client_sock, std::ref(be), std::ref(fb), std::ref(thread_wait_mutex), std::ref(thread_wait_condvar), std::ref(active_threads)).detach();
     }
 
     delete socket;
