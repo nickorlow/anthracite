@@ -32,6 +32,8 @@ public:
     virtual void close_conn();
     virtual void send_message(std::string& msg);
     virtual std::string recv_message(int buffer_size);
+
+    int csock() { return client_socket; }
 };
 
 };

@@ -23,12 +23,13 @@ namespace anthracite::config {
     };
 
     class config {
-        uint16_t _worker_threads;
+        int _worker_threads;
+        int _max_clients;
         std::optional<http_config> _http_config;
         std::optional<https_config> _https_config;
 
     public:
-        config(uint16_t worker_threads) : _worker_threads(worker_threads) {
+        config(int worker_threads, int max_clients) : _worker_threads(worker_threads), _max_clients(max_clients) {
         }
 
         void add_http_config(http_config config) {
@@ -39,8 +40,12 @@ namespace anthracite::config {
             _https_config = config;
         }
 
-        uint16_t worker_threads() {
+        int worker_threads() {
             return _worker_threads;
+        }
+        
+        int max_clients() {
+            return _max_clients;
         }
 
         std::optional<http_config>& http_cfg() {

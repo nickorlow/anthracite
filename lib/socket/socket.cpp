@@ -11,7 +11,7 @@
 
 namespace anthracite::socket {
 
-const struct timeval anthracite_socket::timeout_tv = { .tv_sec = 5, .tv_usec = 0};
+const struct timeval anthracite_socket::timeout_tv = { .tv_sec = 5, .tv_usec = 0 };
 
 anthracite_socket::anthracite_socket(int port, int max_queue)
     : server_socket(::socket(AF_INET, SOCK_STREAM, 0))
@@ -32,11 +32,11 @@ anthracite_socket::anthracite_socket(int port, int max_queue)
 bool anthracite_socket::wait_for_conn()
 {
     client_ip = "";
-    struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
+    struct timeval tv = { .tv_sec = 1, .tv_usec = 0 };
     fd_set read_fd;
     FD_ZERO(&read_fd);
     FD_SET(server_socket, &read_fd);
-    if (select(server_socket+1, &read_fd, NULL, NULL, &wait_timeout)) {
+    if (select(server_socket + 1, &read_fd, NULL, NULL, &wait_timeout)) {
         client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
         std::array<char, INET_ADDRSTRLEN> ip_str { 0 };
         inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN);

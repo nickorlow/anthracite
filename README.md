@@ -1,5 +1,6 @@
 # Anthracite
-A simple web server written in C++. Supports HTTP 1.0 & 1.1.
+
+Anthracite is an extensible, low-dependency, fast web server.
 
 ## Developing
 
@@ -16,7 +17,7 @@ Create a `build/` directory, run `cmake ..`, and then `make` to build.
 - [x] HTTP/1.1
 - [x] Enhance logging
 - [x] Create library that can be used to implement custom backends (i.e. webapi, fileserver, etc) 
-- [ ] Faster parsing 
+- [x] Faster parsing 
 - [ ] HTTP/2 
 - [ ] Improve benchmarking infrastructure
 - [ ] Fix glaring security issues 

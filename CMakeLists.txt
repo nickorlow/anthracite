@@ -39,9 +39,6 @@ target_link_libraries(anthracite-bin anthracite)
 add_dependencies(anthracite-bin build-supplemental)
 add_dependencies(anthracite-bin anthracite)
 
-add_executable(anthracite-api-bin src/api_main.cpp) 
-target_link_libraries(anthracite-api-bin anthracite)
-
 include(FetchContent)
 FetchContent_Declare(
   googletest

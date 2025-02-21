@@ -10,6 +10,11 @@ void Logger::initialize(enum LOG_LEVEL level)
     _level = level;
 }
 
+void Logger::log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp, uint32_t micros)
+{
+    log::info << "[" << resp->status_code() << " " + http::status_map.find(resp->status_code())->second + "] " + req.client_ip() + " " + http::reverse_method_map.find(req.get_method())->second + " " + req.path() << " in " << micros << " usecs" << std::endl;
+}
+
 LogBuf::LogBuf(std::ostream& output_stream, const std::string& tag, enum LOG_LEVEL level)
     : _output_stream(output_stream)
     , _tag(tag)

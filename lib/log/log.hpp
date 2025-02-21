@@ -3,6 +3,10 @@
 #include <iostream>
 #include <ostream>
 #include <sstream>
+#include <inttypes.h>
+#include <memory>
+#include "../http/request.hpp"
+#include "../http/response.hpp"
 
 namespace anthracite::log {
     enum LOG_LEVEL {
@@ -21,9 +25,9 @@ namespace anthracite::log {
         
         Logger();
         void initialize(enum LOG_LEVEL level);
+        void log_request_and_response(http::request& req, std::unique_ptr<http::response>& resp, uint32_t micros);
     };
     
-
     class LogBuf : public std::stringbuf
     {
             std::string _tag;
@@ -50,4 +54,6 @@ namespace anthracite::log {
 
     static class LogBuf debugBuf{std::cout, "DEBG", LOG_LEVEL_DEBUG};
     static std::ostream debug(&debugBuf);
+
+
 };

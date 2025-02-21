@@ -1,18 +1,18 @@
-#include <exception>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
 #include "./openssl_socket.hpp"
+#include "../log/log.hpp"
 #include <arpa/inet.h>
 #include <array>
+#include <exception>
+#include <iostream>
 #include <malloc.h>
 #include <netinet/in.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
 #include <string>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <vector>
-#include <iostream>
-#include "../log/log.hpp"
 
 namespace anthracite::socket {
 
@@ -21,7 +21,7 @@ SSL_CTX* openssl_socket::_context = nullptr;
 openssl_socket::openssl_socket(int port, int max_queue)
     : anthracite_socket(port, max_queue)
 {
-    const SSL_METHOD *method = TLS_server_method();
+    const SSL_METHOD* method = TLS_server_method();
 
     if (_context == nullptr) {
         _context = SSL_CTX_new(method);
@@ -37,7 +37,7 @@ openssl_socket::openssl_socket(int port, int max_queue)
         throw std::exception();
     }
 
-    if (SSL_CTX_use_PrivateKey_file(_context, "key.pem", SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_PrivateKey_file(_context, "key.pem", SSL_FILETYPE_PEM) <= 0) {
         log::err << "Unable to open key.pem" << std::endl;
         throw std::exception();
     }
@@ -48,11 +48,11 @@ openssl_socket::~openssl_socket() = default;
 bool openssl_socket::wait_for_conn()
 {
     client_ip = "";
-    struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
+    struct timeval tv = { .tv_sec = 1, .tv_usec = 0 };
     fd_set read_fd;
     FD_ZERO(&read_fd);
     FD_SET(server_socket, &read_fd);
-    if (select(server_socket+1, &read_fd, NULL, NULL, &wait_timeout)) {
+    if (select(server_socket + 1, &read_fd, NULL, NULL, &wait_timeout)) {
         client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
         std::array<char, INET_ADDRSTRLEN> ip_str { 0 };
         inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN);
@@ -70,8 +70,6 @@ bool openssl_socket::wait_for_conn()
     } else {
         return false;
     }
-
- 
 }
 
 void openssl_socket::close_conn()
@@ -98,7 +96,7 @@ std::string openssl_socket::recv_message(int buffer_size)
 
     setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout_tv, sizeof timeout_tv);
     std::vector<char> response(buffer_size + 1);
-    ssize_t result = SSL_read(_ssl, response.data(), buffer_size+1);
+    ssize_t result = SSL_read(_ssl, response.data(), buffer_size + 1);
 
     if (result < 1) {
         return "";
