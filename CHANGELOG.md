@@ -1,4 +1,6 @@
 # 0.3.0 
+- SSL support via OpenSSL
+- Switched from thread per connection to event driven threading model
 - Rewrote request parser for readability and speed
 - Added improved logging with different log levels
 - Separated anthracite into libanthracite and anthracite-bin to allow for other projects to implement anthracite (example in ./src/api_main.cpp)

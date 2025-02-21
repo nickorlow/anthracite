@@ -108,5 +108,5 @@ int main(int argc, char** argv)
     auto args = std::span(argv, size_t(argc));
     api_backend ab;
     ab.register_endpoint("users/*", handle_request);
-    anthracite_main(argc, argv, ab);
+    //anthracite_main(argc, argv, ab);
 }

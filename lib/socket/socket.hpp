@@ -14,6 +14,7 @@ namespace anthracite::socket {
 class anthracite_socket {
 
 protected:
+    struct timeval wait_timeout = { .tv_sec = 1, .tv_usec = 0};
     int server_socket;
     int client_socket {};
     std::string client_ip;
@@ -27,7 +28,7 @@ public:
 
     virtual const std::string& get_client_ip() final;
 
-    virtual void wait_for_conn();
+    virtual bool wait_for_conn();
     virtual void close_conn();
     virtual void send_message(std::string& msg);
     virtual std::string recv_message(int buffer_size);

@@ -14,7 +14,7 @@ class openssl_socket : public anthracite_socket {
         openssl_socket(int port, int max_queue = MAX_QUEUE_LENGTH);
         ~openssl_socket();
 
-        void wait_for_conn() override;
+        bool wait_for_conn() override;
         void close_conn() override;
         void send_message(std::string& msg) override;
         std::string recv_message(int buffer_size) override;

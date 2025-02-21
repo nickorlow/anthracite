@@ -45,22 +45,33 @@ openssl_socket::openssl_socket(int port, int max_queue)
 
 openssl_socket::~openssl_socket() = default;
 
-void openssl_socket::wait_for_conn()
+bool openssl_socket::wait_for_conn()
 {
     client_ip = "";
-    client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
-    std::array<char, INET_ADDRSTRLEN> ip_str { 0 };
-    inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN);
-    client_ip = std::string(ip_str.data());
- 
-    _ssl = SSL_new(_context);
-    SSL_set_fd(_ssl, client_socket);
-    if (SSL_accept(_ssl) <= 0) {
-        log::warn << "Unable to open SSL connection with client" << std::endl;
-        client_ip = "";
-        close(client_socket);
-        client_socket = -1;
+    struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
+    fd_set read_fd;
+    FD_ZERO(&read_fd);
+    FD_SET(server_socket, &read_fd);
+    if (select(server_socket+1, &read_fd, NULL, NULL, &wait_timeout)) {
+        client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
+        std::array<char, INET_ADDRSTRLEN> ip_str { 0 };
+        inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN);
+        client_ip = std::string(ip_str.data());
+        _ssl = SSL_new(_context);
+        SSL_set_fd(_ssl, client_socket);
+        if (SSL_accept(_ssl) <= 0) {
+            log::warn << "Unable to open SSL connection with client" << std::endl;
+            client_ip = "";
+            close(client_socket);
+            client_socket = -1;
+            return false;
+        }
+        return true;
+    } else {
+        return false;
     }
+
+ 
 }
 
 void openssl_socket::close_conn()
