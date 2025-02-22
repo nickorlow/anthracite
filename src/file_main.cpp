@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     signal(SIGINT, signalHandler);
 
     anthracite::backends::file_backend fb("./www");
-    anthracite::config::config cfg(5, 10000);
+    anthracite::config::config cfg(3, 1000);
     cfg.add_http_config(anthracite::config::http_config(8080));
     // cfg.add_https_config(config::https_config(8081, "", ""));
 

@@ -17,7 +17,7 @@ namespace anthracite::thread_mgr {
                     std::chrono::time_point<std::chrono::high_resolution_clock>& timestamp();    
             };
 
-            int _epoll_fd;
+            std::vector<int> _epoll_fds;
             std::mutex _event_mtx;
             std::condition_variable _event_cv;
             std::queue<event> _events;
@@ -26,7 +26,7 @@ namespace anthracite::thread_mgr {
             void worker_thread_loop(int threadno);
             void listener_thread_loop(config::http_config& http_config);
             void eventer_thread_loop();
-            bool event_handler(event& ev);
+            bool event_handler(socket::anthracite_socket*);
 
         public:
             event_loop(backends::backend& backend, config::config& config);
