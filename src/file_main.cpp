@@ -10,7 +10,7 @@ std::shared_ptr<anthracite::thread_mgr::thread_mgr> server = nullptr;
 
 extern "C" void signalHandler(int signum)
 {
-    anthracite::log::warn << "Caught signal SIG" << sigabbrev_np(signum) << ", exiting Anthracite" << std::endl;
+    //anthracite::log::warn << "Caught signal SIG" << sigabbrev_np(signum) << ", exiting Anthracite" << std::endl;
     if (server != nullptr) {
         server->stop();
     }
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     signal(SIGINT, signalHandler);
 
     anthracite::backends::file_backend fb("./www");
-    anthracite::config::config cfg(3, 1000);
+    anthracite::config::config cfg(1, 10);
     cfg.add_http_config(anthracite::config::http_config(8080));
     // cfg.add_https_config(config::https_config(8081, "", ""));
 

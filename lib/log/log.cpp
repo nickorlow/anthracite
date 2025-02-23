@@ -1,4 +1,5 @@
 #include "./log.hpp"
+#include <syncstream>
 
 namespace anthracite::log {
 enum LOG_LEVEL Logger::_level = LOG_LEVEL_NONE;
@@ -25,7 +26,9 @@ LogBuf::LogBuf(std::ostream& output_stream, const std::string& tag, enum LOG_LEV
 int LogBuf::sync()
 {
     if (this->_level <= logger._level) {
-        std::cout << "[" << this->_tag << "] " << this->str();
+        char thread_name[100];
+        pthread_getname_np(pthread_self(), thread_name, 100);
+        std::osyncstream(std::cout) << "[" << this->_tag << "] [" << syscall(SYS_gettid) <<  ":" << thread_name << "] "<< this->str();
         std::cout.flush();
     }
     this->str("");

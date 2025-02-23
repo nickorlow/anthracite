@@ -17,11 +17,10 @@ namespace anthracite::thread_mgr {
                     std::chrono::time_point<std::chrono::high_resolution_clock>& timestamp();    
             };
 
-            std::vector<int> _epoll_fds;
+            int _epoll_fd;
             std::mutex _event_mtx;
-            std::condition_variable _event_cv;
-            std::queue<event> _events;
             backends::file_backend _error_backend;
+            bool _nonblocking;
 
             void worker_thread_loop(int threadno);
             void listener_thread_loop(config::http_config& http_config);

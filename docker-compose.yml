@@ -2,7 +2,7 @@ services:
   anthracite-web:
     build: .
     ports:
-      - "8080:80"
+      - "8080:8080"
     volumes:
       - type: bind
         source: ./default_www/docker_compose/

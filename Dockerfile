@@ -1,8 +1,9 @@
 FROM alpine as build-env
 
-RUN apk add --no-cache build-base python3 cmake
+RUN apk add --no-cache build-base python3 cmake openssl-dev
 COPY ./src ./src
 COPY ./lib ./lib
+COPY ./tests ./tests
 COPY ./default_www ./default_www
 COPY ./build_supp ./build_supp
 COPY ./CMakeLists.txt .

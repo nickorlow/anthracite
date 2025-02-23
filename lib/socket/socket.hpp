@@ -14,6 +14,7 @@ namespace anthracite::socket {
 class anthracite_socket {
 
 protected:
+    bool _nonblocking;
     struct timeval wait_timeout = { .tv_sec = 1, .tv_usec = 0};
     int server_socket;
     int client_socket {};
@@ -24,10 +25,11 @@ protected:
     static const int MAX_QUEUE_LENGTH = 100;
 
 public:
-    anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH);
+    anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH, bool nonblocking = false);
 
     virtual const std::string& get_client_ip() final;
 
+    virtual bool has_client();
     virtual bool wait_for_conn();
     virtual void close_conn();
     virtual void send_message(std::string& msg);
