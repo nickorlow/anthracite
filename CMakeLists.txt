@@ -18,8 +18,9 @@ add_custom_target(build-version
 add_custom_target(build-supplemental 
     COMMAND cd ../build_supp && python3 ./error_gen.py
     COMMAND mkdir -p www && cp -r ../default_www/regular/* ./www/
+    COMMAND cp ../build_supp/default_config.cfg ./anthracite.cfg
     DEPENDS build_supp/version.txt ../default_www/regular/* build_supp/error_gen.py build-version
-    COMMENT "Generated supplemental build files (default www dir + error pages)"
+    COMMENT "Generated supplemental build files (default www dir + default config + error pages)"
 )
 
 add_custom_target(run

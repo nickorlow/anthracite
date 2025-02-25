@@ -5,6 +5,7 @@
 #include <sstream>
 #include <inttypes.h>
 #include <memory>
+#include <string>
 #include "../http/request.hpp"
 #include "../http/response.hpp"
 

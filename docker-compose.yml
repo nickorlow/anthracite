@@ -7,3 +7,6 @@ services:
       - type: bind
         source: ./default_www/docker_compose/
         target: /www 
+      - type: bind
+        source: ./build_supp/default_config.cfg
+        target: /anthracite.cfg

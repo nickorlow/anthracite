@@ -6,6 +6,7 @@
 #include <iostream>
 #include <malloc.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <string>
@@ -16,85 +17,101 @@
 
 namespace anthracite::socket {
 
-SSL_CTX* openssl_socket::_context = nullptr;
-
-openssl_socket::openssl_socket(int port, int max_queue)
-    : anthracite_socket(port, max_queue)
+openssl_listener::openssl_listener(std::string& key_path, std::string& cert_path, int port, int max_queue, bool nonblocking)
+    : listener(port, max_queue, nonblocking)
 {
     const SSL_METHOD* method = TLS_server_method();
 
-    if (_context == nullptr) {
-        _context = SSL_CTX_new(method);
-    }
+    _context = SSL_CTX_new(method);
 
     if (!_context) {
         log::err << "Unable to initialize SSL" << std::endl;
         throw std::exception();
     }
 
-    if (SSL_CTX_use_certificate_file(_context, "cert.pem", SSL_FILETYPE_PEM) <= 0) {
-        log::err << "Unable to open cert.pem" << std::endl;
+    if (SSL_CTX_use_certificate_file(_context, cert_path.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        log::err << "Unable to open Cert file at: " << cert_path << std::endl;
         throw std::exception();
     }
 
-    if (SSL_CTX_use_PrivateKey_file(_context, "key.pem", SSL_FILETYPE_PEM) <= 0) {
-        log::err << "Unable to open key.pem" << std::endl;
+    if (SSL_CTX_use_PrivateKey_file(_context, key_path.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        log::err << "Unable to open Key file at: " << key_path << std::endl;
         throw std::exception();
     }
 }
 
-openssl_socket::~openssl_socket() = default;
-
-bool openssl_socket::wait_for_conn()
+bool openssl_listener::wait_for_conn(server** client_sock_p)
 {
-    client_ip = "";
-    struct timeval tv = { .tv_sec = 1, .tv_usec = 0 };
-    fd_set read_fd;
-    FD_ZERO(&read_fd);
-    FD_SET(server_socket, &read_fd);
-    if (select(server_socket + 1, &read_fd, NULL, NULL, &wait_timeout)) {
-        client_socket = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
-        std::array<char, INET_ADDRSTRLEN> ip_str { 0 };
-        inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN);
-        client_ip = std::string(ip_str.data());
-        _ssl = SSL_new(_context);
-        SSL_set_fd(_ssl, client_socket);
-        if (SSL_accept(_ssl) <= 0) {
-            log::warn << "Unable to open SSL connection with client" << std::endl;
-            client_ip = "";
-            close(client_socket);
-            client_socket = -1;
+    struct sockaddr_in client_addr {};
+    socklen_t client_addr_len;
+
+    int csock = accept(_sock_fd, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
+
+    if (csock > 0) {
+        std::array<char, INET6_ADDRSTRLEN> ip_str { 0 };
+
+        if (inet_ntop(AF_INET, &client_addr.sin_addr, ip_str.data(), INET_ADDRSTRLEN) == NULL) {
+            if (inet_ntop(AF_INET6, &client_addr.sin_addr, ip_str.data(), INET6_ADDRSTRLEN) == NULL) {
+                log::warn << "Unable to decode client's IP address" << std::endl;
+            }
+        }
+
+        SSL* ssl = SSL_new(_context);
+
+        if (ssl == NULL) {
+            for (int i = 0; i < 5 && close(csock) != 0; ++i)
+                ;
             return false;
         }
+
+        if (SSL_set_fd(ssl, csock) == 0) {
+            SSL_free(ssl);
+            for (int i = 0; i < 5 && close(csock) != 0; ++i)
+                ;
+            return false;
+        }
+
+        if (SSL_accept(ssl) <= 0) {
+            log::warn << "Unable to open SSL connection with client" << std::endl;
+            SSL_free(ssl);
+            for (int i = 0; i < 5 && close(csock) != 0; ++i)
+                ;
+            return false;
+        }
+
+        std::string client_ip = std::string(ip_str.data());
+        *client_sock_p = new openssl_server(csock, client_ip, _nonblocking, ssl);
         return true;
     } else {
         return false;
     }
 }
 
-void openssl_socket::close_conn()
+openssl_listener::~openssl_listener() {}
+
+openssl_server::openssl_server(int sock_fd, std::string client_ip, bool nonblocking, SSL* ssl)
+    : server(sock_fd, client_ip, nonblocking)
+    , _ssl(ssl)
+{
+}
+
+openssl_server::~openssl_server()
 {
     SSL_shutdown(_ssl);
     SSL_free(_ssl);
-    close(client_socket);
-    client_socket = -1;
 }
 
-void openssl_socket::send_message(std::string& msg)
+void openssl_server::send_message(const std::string& msg)
 {
-    if (client_socket == -1) {
-        return;
-    }
     SSL_write(_ssl, &msg[0], msg.length());
 }
 
-std::string openssl_socket::recv_message(int buffer_size)
+std::string openssl_server::recv_message(int buffer_size)
 {
-    if (client_socket == -1) {
-        return "";
-    }
+    // Ignored because it's nonfatal, just slower
+    int nodelay_opt = 1;
+    (void)setsockopt(_sock_fd, SOL_TCP, TCP_NODELAY, &nodelay_opt, sizeof(nodelay_opt));
 
-    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout_tv, sizeof timeout_tv);
     std::vector<char> response(buffer_size + 1);
     ssize_t result = SSL_read(_ssl, response.data(), buffer_size + 1);
 

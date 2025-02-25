@@ -18,5 +18,6 @@ FROM alpine
 RUN apk add --no-cache libgcc libstdc++
 COPY --from=build-env /build/anthracite-bin /anthracite-bin
 COPY --from=build-env /build/error_pages /error_pages 
+COPY --from=build-env /build_supp/default_config.cfg /anthracite.cfg
 COPY /default_www/docker /www 
 CMD ["/anthracite-bin"] 

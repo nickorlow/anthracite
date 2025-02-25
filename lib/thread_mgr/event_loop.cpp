@@ -1,14 +1,14 @@
 #include "./event_loop.hpp"
 #include "../log/log.hpp"
-#include "../socket/openssl_socket.hpp"
 #include "assert.h"
+#include "signal.h"
 #include "sys/epoll.h"
 #include <chrono>
 #include <mutex>
 #include <pthread.h>
 #include <sstream>
 #include <syncstream>
-#include "signal.h"
+#include <thread>
 
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -16,29 +16,18 @@ using std::chrono::high_resolution_clock;
 using std::chrono::milliseconds;
 
 namespace anthracite::thread_mgr {
-event_loop::event::event(socket::anthracite_socket* socket, std::chrono::time_point<std::chrono::high_resolution_clock> timestamp)
-    : _socket(socket)
-    , _ts(timestamp)
-{
-}
 
-socket::anthracite_socket* event_loop::event::socket()
-{
-    return _socket;
-}
-
-std::chrono::time_point<std::chrono::high_resolution_clock>& event_loop::event::timestamp()
-{
-    return _ts;
-}
-
-event_loop::event_loop(backends::backend& backend, config::config& config)
-    : thread_mgr(backend, config)
+event_loop::event_loop(std::vector<socket::listener*>& listen_sockets, backends::backend& backend, int max_threads, int max_clients)
+    : thread_mgr(backend)
     , _error_backend("./www")
+    , _max_threads(max_threads)
+    , _listen_sockets(listen_sockets)
+    , _max_clients(max_clients)
+    , _nonblocking(false)
 {
 }
 
-bool event_loop::event_handler(socket::anthracite_socket* sock)
+bool event_loop::event_handler(socket::server* sock)
 {
     std::string raw_request = sock->recv_message(http::HEADER_BYTES);
 
@@ -46,7 +35,7 @@ bool event_loop::event_handler(socket::anthracite_socket* sock)
         return false;
     }
 
-    http::request req(raw_request, sock->get_client_ip());
+    http::request req(raw_request, sock->client_ip());
     std::unique_ptr<http::response> resp = req.is_supported_version() ? _backend.handle_request(req) : _error_backend.handle_error(http::status_codes::HTTP_VERSION_NOT_SUPPORTED);
     std::string header = resp->header_to_string();
     sock->send_message(header);
@@ -65,105 +54,79 @@ void event_loop::worker_thread_loop(int threadno)
     ss << "worker " << threadno;
     pthread_setname_np(pthread_self(), ss.str().c_str());
 
-    struct epoll_event* events = new struct epoll_event[_config.max_clients()];
+    struct epoll_event* events = new struct epoll_event[_max_clients];
     int timeout_ms = 1000;
 
     if (_nonblocking) {
         timeout_ms = 0;
     }
 
-    log::info << "Starting worker thread " << threadno << std::endl;
+    std::osyncstream(log::info) << "Starting worker thread " << threadno << std::endl;
+
+    int epoll_fd = epoll_create(1);
+
+    for (socket::listener* sl : _listen_sockets) {
+        struct epoll_event event;
+        event.events = EPOLLIN | EPOLLEXCLUSIVE;
+        event.data.ptr = sl;
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sl->fd(), &event);
+        if (threadno == 0) {
+            std::osyncstream(log::info) << "Listening started on port " << sl->port() << std::endl;
+        }
+    }
 
     while (_run) {
-        int ready_fds = epoll_wait(_epoll_fd, events, _config.max_clients(), timeout_ms);
+        int ready_fds = epoll_wait(epoll_fd, events, _max_clients, timeout_ms);
 
         if (ready_fds > 0) {
             for (int i = 0; i < ready_fds; i++) {
-                socket::anthracite_socket* sockptr = reinterpret_cast<socket::anthracite_socket*>(events[i].data.ptr);
+                socket::socket* sockptr = reinterpret_cast<socket::socket*>(events[i].data.ptr);
+                socket::server* server_ptr = dynamic_cast<socket::server*>(sockptr);
 
-                if (!event_handler(sockptr)) {
-                    epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, sockptr->csock(), &events[i]);
-                    sockptr->close_conn();
-                    delete sockptr;
+                if (server_ptr != nullptr) {
+                    if (!event_handler(server_ptr)) {
+                        delete server_ptr;
+                    }
+                } else {
+                    socket::listener* listen_ptr = dynamic_cast<socket::listener*>(sockptr);
+                    if (listen_ptr != nullptr) {
+                        socket::server* server_sock;
+                        while (listen_ptr->wait_for_conn(&server_sock)) {
+                            struct epoll_event event;
+                            event.events = EPOLLIN | EPOLLEXCLUSIVE;
+                            event.data.ptr = server_sock;
+                            epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_sock->fd(), &event);
+                        }
+                    } else {
+                        std::osyncstream(log::err) << "Had socket type that wasn't listener or server" << std::endl;
+                    }
                 }
             }
         }
     }
 
-    log::info << "Stopping worker thread " << threadno << std::endl;
-}
+    delete[] events;
 
-void event_loop::listener_thread_loop(config::http_config& http_config)
-{
-    socket::anthracite_socket* socket;
-
-    config::http_config* http_ptr = &http_config;
-    config::https_config* https_ptr = dynamic_cast<config::https_config*>(http_ptr);
-
-    bool is_tls = https_ptr != nullptr;
-
-    if (is_tls) {
-        socket = new socket::openssl_socket(https_ptr->port());
-    } else {
-        socket = new socket::anthracite_socket(http_ptr->port());
-    }
-
-    std::osyncstream(log::info) << "Listening for " << (is_tls ? "HTTPS" : "HTTP") << " connections on port " << http_ptr->port() << std::endl;
-
-    while (_run) {
-        if (socket->wait_for_conn()) {
-            socket::anthracite_socket* client_sock;
-
-            if (is_tls) {
-                socket::openssl_socket* ssl_sock = dynamic_cast<socket::openssl_socket*>(socket);
-                client_sock = new socket::openssl_socket(*ssl_sock);
-            } else {
-                client_sock = new socket::anthracite_socket(*socket);
-            }
-
-            struct epoll_event event;
-            event.events = EPOLLIN | EPOLLEXCLUSIVE;// | EPOLLET;
-            event.data.ptr = client_sock;
-            epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_sock->csock(), &event);
-        }
-    }
-
-    std::osyncstream(log::info) << "Stopping listening for " << (is_tls ? "HTTPS" : "HTTP") << " connections on port " << http_ptr->port() << std::endl;
-
-    delete socket;
+    std::osyncstream(log::info) << "Stopping worker thread " << threadno << std::endl;
 }
 
 void event_loop::start()
 {
+    std::lock_guard<std::mutex> lg(_run_lock);
+
     signal(SIGPIPE, SIG_IGN);
     log::info << "Starting event_loop Thread Manager" << std::endl;
 
     _run = true;
-    _epoll_fd = epoll_create(1);
 
-    std::vector<std::thread> listener_threads;
     std::vector<std::thread> worker_threads;
 
-    for (int i = 0; i < _config.worker_threads(); i++) {
+    for (int i = 0; i < _max_threads; i++) {
         auto thread = std::thread(&event_loop::worker_thread_loop, this, i);
         worker_threads.push_back(std::move(thread));
     }
 
-    if (_config.http_cfg().has_value()) {
-        auto thread = std::thread(&event_loop::listener_thread_loop, this, std::ref(_config.http_cfg().value()));
-        listener_threads.push_back(std::move(thread));
-    }
-
-    if (_config.https_cfg().has_value()) {
-        auto thread = std::thread(&event_loop::listener_thread_loop, this, std::ref(_config.https_cfg().value()));
-        listener_threads.push_back(std::move(thread));
-    }
-
     for (std::thread& t : worker_threads) {
-        t.join();
-    }
-
-    for (std::thread& t : listener_threads) {
         t.join();
     }
 }

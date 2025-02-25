@@ -1,15 +1,15 @@
 # 0.3.0 
 - SSL support via OpenSSL
 - Added "Thread Manager" class to allow for multiple (or custom) threading models (process per thread, event loop)
-- Defaul threading model is now event loop
+- Default (and only included) threading model is now event loop
 - Rewrote request parser for readability and speed
+- Rewrote socket system for readability and speed
 - Added improved logging with different log levels
 - Separated anthracite into libanthracite and anthracite-bin to allow for other projects to implement anthracite (example in ./src/api_main.cpp)
 - Cleaned up code and seperated most code into headers & source
 - Revamped build system to use CMake properly
 - Moved CI/CD over to Forgejo
 - General system stability improvements were made to enhance the user's experience
-
 
 ## HTTP Request Parser Rewrite
 

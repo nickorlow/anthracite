@@ -10,32 +10,42 @@
 
 namespace anthracite::socket {
 
+class socket {
+    protected:
+        bool _nonblocking;
+        socket(bool nonblocking);
+    public:
+        socket(){}
+        virtual ~socket(){}
+};
 
-class anthracite_socket {
+class server : public socket {
+    protected:
+        int _sock_fd;
+        std::string _client_ip;
+    public:
+        server(int sock_fd, std::string client_ip, bool nonblocking);
+        ~server();
 
-protected:
-    bool _nonblocking;
-    struct timeval wait_timeout = { .tv_sec = 1, .tv_usec = 0};
-    int server_socket;
-    int client_socket {};
-    std::string client_ip;
-    struct sockaddr_in client_addr {};
-    socklen_t client_addr_len {};
-    static const struct timeval timeout_tv;
-    static const int MAX_QUEUE_LENGTH = 100;
+        virtual void send_message(const std::string& msg);
+        virtual std::string recv_message(int buffer_size);
+        const std::string& client_ip();
 
-public:
-    anthracite_socket(int port, int max_queue = MAX_QUEUE_LENGTH, bool nonblocking = false);
+        int fd() { return _sock_fd; }
+};
 
-    virtual const std::string& get_client_ip() final;
+class listener : public socket {
+    protected:
+        uint16_t _port;
+        int _sock_fd;
+    public:
+        listener(int port, int max_queue_length, bool nonblocking);
+        ~listener();
 
-    virtual bool has_client();
-    virtual bool wait_for_conn();
-    virtual void close_conn();
-    virtual void send_message(std::string& msg);
-    virtual std::string recv_message(int buffer_size);
+        virtual bool wait_for_conn(server** client_sock_p);
 
-    int csock() { return client_socket; }
+        int fd() { return _sock_fd; }
+        int port() { return _port; }
 };
 
 };
