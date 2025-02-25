@@ -28,7 +28,7 @@ jobs:
       - name: Write Version 
         run: |
           echo Building with version number $RELEASE_VERSION
-          echo $RELEASE_VERSION > src/build_supp/version.txt
+          echo $RELEASE_VERSION > build_supp/version.txt
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
