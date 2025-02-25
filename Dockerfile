@@ -1,4 +1,4 @@
-FROM alpine as build-env
+FROM alpine AS build-env
 
 RUN apk add --no-cache build-base python3 cmake openssl-dev
 COPY ./src ./src

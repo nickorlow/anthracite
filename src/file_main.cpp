@@ -3,10 +3,8 @@
 #include "../lib/socket/openssl_socket.hpp"
 #include "../lib/socket/socket.hpp"
 #include "../lib/thread_mgr/event_loop.hpp"
-#include "../lib/version.hpp"
+#include "signal.h"
 #include "getopt.h"
-#include "string.h"
-#include "sys/signal.h"
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -251,7 +249,7 @@ int main(int argc, char* argv[])
     while ((c = getopt_long(argc, argv, "hc:", options, &opt_index)) != -1) {
         switch (c) {
         case 'h': {
-            std::cerr << "Anthracite " << ANTHRACITE_VERSION_STRING << " Help" << std::endl;
+            std::cerr << "Anthracite Help" << std::endl;
             std::cerr << std::endl;
             std::cerr << "-h, --help                                 Prints this help menu " << std::endl;
             std::cerr << std::endl;

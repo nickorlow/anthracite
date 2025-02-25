@@ -2,16 +2,19 @@ cmake_minimum_required(VERSION 3.10)
 
 project(anthracite)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(OpenSSL REQUIRED)
 
-add_custom_target(build-version
-    COMMAND cd ../build_supp && ./version.sh
-    DEPENDS build_supp/version.txt 
+configure_file(build_supp/version.txt version.txt COPYONLY)
+
+add_custom_command(
+    COMMAND ../build_supp/version.sh
+    DEPENDS version.txt 
+    OUTPUT ${CMAKE_BINARY_DIR}/version.cpp
     COMMENT "Generated supplemental build files (version)"
 )
 
@@ -19,19 +22,13 @@ add_custom_target(build-supplemental
     COMMAND cd ../build_supp && python3 ./error_gen.py
     COMMAND mkdir -p www && cp -r ../default_www/regular/* ./www/
     COMMAND cp ../build_supp/default_config.cfg ./anthracite.cfg
-    DEPENDS build_supp/version.txt ../default_www/regular/* build_supp/error_gen.py build-version
+    DEPENDS ../default_www/regular/* build_supp/error_gen.py ${CMAKE_BINARY_DIR}/version.cpp
     COMMENT "Generated supplemental build files (default www dir + default config + error pages)"
 )
 
-add_custom_target(run
-    COMMAND anthracite-bin 
-    DEPENDS anthracite-bin 
-    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
-)
-
-FILE(GLOB LIB_SOURCES lib/*.cpp lib/**/*.cpp build_supp/version.cpp)
-add_library(anthracite ${LIB_SOURCES}) 
-add_dependencies(anthracite build-version)
+FILE(GLOB LIB_SOURCES lib/*.cpp lib/**/*.cpp)
+add_library(anthracite ${LIB_SOURCES} ${CMAKE_BINARY_DIR}/version.cpp) 
+add_dependencies(anthracite build-supplemental)
 target_link_libraries(anthracite OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(anthracite PUBLIC ${OPENSSL_INCLUDE_DIR})
 
