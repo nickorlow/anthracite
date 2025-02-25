@@ -9,6 +9,7 @@
 - Cleaned up code and seperated most code into headers & source
 - Revamped build system to use CMake properly
 - Moved CI/CD over to Forgejo
+- Added simple config file system (will be completely replaced by v1.0)
 - General system stability improvements were made to enhance the user's experience
 
 ## HTTP Request Parser Rewrite

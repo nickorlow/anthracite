@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
   pkgs.mkShell {
-    nativeBuildInputs = [ pkgs.pkg-config pkgs.openssl pkgs.libgcc pkgs.boost pkgs.cmake ];
+    nativeBuildInputs = [ pkgs.pkg-config pkgs.openssl pkgs.libgcc pkgs.boost pkgs.cmake pkgs.python312 pkgs.cmake pkgs.gnumake ];
 
     shellHook = ''
       export OPENSSL_DIR="${pkgs.openssl.dev}"
